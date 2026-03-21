@@ -1,0 +1,36 @@
+.intersection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
+}
+
+.middle-row {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.lane {
+    text-align: center;
+}
+
+.light {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 5px auto;
+}
+
+.green {
+    background-color: green;
+}
+
+.red {
+    background-color: red;
+}
+
+.center {
+    font-size: 24px;
+    font-weight: bold;
+}

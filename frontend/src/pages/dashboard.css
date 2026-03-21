@@ -1,0 +1,174 @@
+/* ===== ROOT ===== */
+.dashboard {
+    display: grid;
+    grid-template-columns: 25% 50% 25%;
+    height: 100vh;
+    background: radial-gradient(circle at top, #0b1220, #020617);
+    color: #e2e8f0;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* ===== PANELS ===== */
+.panel {
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 16px;
+    overflow-y: auto;
+    backdrop-filter: blur(6px);
+}
+
+.panel:last-child {
+    border-right: none;
+}
+
+.panel h2 {
+    margin-bottom: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #38bdf8;
+    letter-spacing: 0.5px;
+}
+
+/* ===== LEFT ===== */
+.left {
+    background: linear-gradient(180deg, #0f172a, #020617);
+}
+
+/* ===== CENTER ===== */
+.center {
+    background: #020617;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* ===== RIGHT ===== */
+.right {
+    background: linear-gradient(180deg, #0f172a, #020617);
+}
+
+/* ===== SCROLLBAR (CLEAN) ===== */
+.panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.panel::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 4px;
+}
+
+/* ===== CORRIDOR ANIMATION ===== */
+.corridor-line {
+    animation: moveDash 1s linear infinite;
+    filter: drop-shadow(0 0 8px lime);
+}
+
+@keyframes moveDash {
+    from {
+        stroke-dashoffset: 20;
+    }
+
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ===== LEGEND ===== */
+.map-legend {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    background: rgba(2, 6, 23, 0.85);
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    color: #e2e8f0;
+    z-index: 1000;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+}
+
+.map-legend div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+}
+
+/* ===== DOTS ===== */
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+/* Traffic colors */
+.low {
+    background: #22c55e;
+}
+
+.medium {
+    background: #facc15;
+}
+
+.high {
+    background: #fb923c;
+}
+
+.critical {
+    background: #ef4444;
+}
+
+/* .emergency {
+    background: #22ff88;
+} */
+
+/* ===== CRITICAL PULSE ===== */
+.pulse {
+    animation: pulseRed 1.2s infinite;
+}
+
+@keyframes pulseRed {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 5px red;
+    }
+
+    50% {
+        transform: scale(1.4);
+        box-shadow: 0 0 20px red;
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 5px red;
+    }
+}
+
+/* ===== EMERGENCY MODE ===== */
+.dashboard.emergency {
+    animation: pulseEmergency 1.5s infinite;
+}
+
+@keyframes pulseEmergency {
+
+    0%,
+    100% {
+        box-shadow: inset 0 0 10px rgba(255, 0, 0, 0.2);
+    }
+
+    50% {
+        box-shadow: inset 0 0 40px rgba(255, 0, 0, 0.6);
+    }
+}
+
+
+.hover-info {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    color: white;
+    z-index: 1000;
+}
