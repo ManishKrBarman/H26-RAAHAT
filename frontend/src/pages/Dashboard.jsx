@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import "./dashboard.css";
-import Intersection from "../components/Intersection";
-import DecisionPanel from "../components/DecisionPanel";
 import AlertsPanel from "../components/AlertsPanel";
 import MapView from "../components/MapView";
 import IntersectionPanel from "../components/IntersectionPanel";
@@ -12,7 +10,7 @@ import VideoUploadPanel from "../components/VideoUploadPanel";
 
 
 function Dashboard() {
-  const [data, setData] = useState({});
+  const [data, setData] = useState({ intersections: [] });
   const [alerts, setAlerts] = useState([]);
   const [selectedIntersection, setSelectedIntersection] = useState(null);
 
@@ -20,60 +18,63 @@ function Dashboard() {
     int.lanes?.some(l => l.emergency)
   );
 
-  // Set first intersection as selected when data arrives
+  // Poll /traffic/current (now built from DB)
   useEffect(() => {
-    if (data.intersections?.length > 0 && !selectedIntersection) {
-      setSelectedIntersection(data.intersections[0].id);
-    }
-  }, [data.intersections]);
-
-  useEffect(() => {
-    const interval = setInterval(async () => {
+    const fetchData = async () => {
       try {
         const res = await axios.get("http://localhost:3000/traffic/current");
         setData(res.data);
+
+        // Auto-select first intersection if none selected
+        if (!selectedIntersection && res.data.intersections?.length > 0) {
+          setSelectedIntersection(res.data.intersections[0].id);
+        }
 
         // Emergency alert
         if (res.data.intersections?.some(int =>
           int.lanes?.some(l => l.emergency)
         )) {
-          setAlerts(prev => [
-            {
-              message: "🚨 Emergency vehicle detected!",
-              time: new Date().toLocaleTimeString(),
-              type: "emergency"
-            },
-            ...prev.slice(0, 19)
-          ]);
-        }
-
-        // Signal change alert
-        const signalState = res.data.signalState;
-        if (signalState?.active_lane) {
           setAlerts(prev => {
-            if (prev[0]?.message === `Lane ${signalState.active_lane} → GREEN (${signalState.mode})`) {
-              return prev;
-            }
+            if (prev[0]?.type === "emergency") return prev;
             return [
               {
-                message: `Lane ${signalState.active_lane} → GREEN (${signalState.mode})`,
+                message: "🚨 Emergency vehicle detected!",
                 time: new Date().toLocaleTimeString(),
-                type: signalState.mode === "MANUAL" ? "manual" : "info"
+                type: "emergency"
               },
               ...prev.slice(0, 19)
             ];
           });
         }
 
+        // Signal change alerts per intersection
+        for (const int of (res.data.intersections || [])) {
+          const signal = int.signal;
+          if (signal?.active_lane) {
+            const msg = `${int.id}: Lane ${signal.active_lane} → GREEN (${signal.mode})`;
+            setAlerts(prev => {
+              if (prev[0]?.message === msg) return prev;
+              return [
+                {
+                  message: msg,
+                  time: new Date().toLocaleTimeString(),
+                  type: signal.mode === "MANUAL" ? "manual" : "info"
+                },
+                ...prev.slice(0, 19)
+              ];
+            });
+          }
+        }
+
       } catch (err) {
-        console.error("Error fetching data:", err);
+        // silent — server might not be running yet
       }
-    }, 2000);
+    };
 
+    fetchData();
+    const interval = setInterval(fetchData, 2000);
     return () => clearInterval(interval);
-  }, []);
-
-  if (!data || !data.intersections) return <p style={{ color: "#64748b", padding: "40px", textAlign: "center" }}>Loading dashboard...</p>;
+  }, [selectedIntersection]);
 
   return (
     <div className={`dashboard ${isEmergency ? "emergency" : ""}`}>
@@ -82,24 +83,34 @@ function Dashboard() {
       <div className="panel left">
         <h2>🚦 Intersections</h2>
 
-        {data.intersections.map((int) => (
-          <div
-            key={int.id}
-            onClick={() => setSelectedIntersection(int.id)}
-            style={{ cursor: "pointer" }}
-          >
-            <IntersectionPanel
-              intersection={int}
-              isSelected={selectedIntersection === int.id}
-            />
-          </div>
-        ))}
+        {data.intersections.length === 0 ? (
+          <p style={{ color: "#64748b", fontSize: "12px", padding: "12px" }}>
+            No intersections registered yet. Register via POST /intersections API.
+          </p>
+        ) : (
+          data.intersections.map((int) => (
+            <div
+              key={int.id}
+              onClick={() => setSelectedIntersection(int.id)}
+              style={{ cursor: "pointer" }}
+            >
+              <IntersectionPanel
+                intersection={int}
+                isSelected={selectedIntersection === int.id}
+              />
+            </div>
+          ))
+        )}
       </div>
 
       {/* CENTER PANEL */}
       <div className="panel center">
 
-        <MapView data={data} />
+        <MapView
+          data={data}
+          onSelectIntersection={setSelectedIntersection}
+          selectedIntersection={selectedIntersection}
+        />
 
         {/* 4-Lane Video Feed Grid — under the map */}
         <VideoFeedPanel intersectionId={selectedIntersection} />
@@ -110,11 +121,10 @@ function Dashboard() {
       <div className="panel right">
         <h2>🎛️ Control Center</h2>
 
-        <ManualControlPanel />
+        <ManualControlPanel selectedIntersection={selectedIntersection} />
 
-        {/* Video Upload */}
         <div style={{ marginTop: "16px" }}>
-          <VideoUploadPanel />
+          <VideoUploadPanel selectedIntersection={selectedIntersection} />
         </div>
 
         <div style={{ marginTop: "16px" }}>

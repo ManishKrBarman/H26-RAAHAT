@@ -1,102 +1,130 @@
-let currentSignal = {
-    active_lane: null,
-    endsAt: null,
-    mode: "AUTO", // AUTO | MANUAL
-    reason: null,
-    duration: 0
-};
+/**
+ * signal.controller.js — Per-Intersection Signal State Manager
+ * 
+ * Each intersection has its own signal state (active lane, timer, mode).
+ * Now also tracks next_lane prediction.
+ */
+
+// Map of intersection_id → signal state
+const signals = {};
+
+function getOrCreateSignal(intersectionId) {
+    if (!signals[intersectionId]) {
+        signals[intersectionId] = {
+            active_lane: null,
+            endsAt: null,
+            mode: "AUTO",
+            reason: null,
+            duration: 0,
+            next_lane: null,
+            next_reason: null,
+            next_duration: null
+        };
+    }
+    return signals[intersectionId];
+}
 
 /**
- * Force-override the current signal immediately, regardless of remaining time.
- * Used by emergency detection and high-congestion scenarios.
+ * Force-override a signal immediately.
  */
-function forceOverride(decision) {
-    currentSignal = {
+function forceOverride(intersectionId, decision) {
+    signals[intersectionId] = {
         active_lane: decision.active_lane,
         endsAt: Date.now() + decision.duration * 1000,
         mode: "AUTO",
         reason: decision.reason,
-        duration: decision.duration
+        duration: decision.duration,
+        next_lane: decision.next_lane || null,
+        next_reason: decision.next_reason || null,
+        next_duration: decision.next_duration || null
     };
-    return getSignalState();
+    return getSignalState(intersectionId);
 }
 
 /**
- * Update signal based on AI decision.
- * Rules:
- *   1. Emergency ALWAYS overrides (even manual mode)
- *   2. High congestion overrides if >50% of current timer has elapsed (unless emergency is active)
- *   3. Otherwise, respect the current timer — don't change until it expires
- *   4. When timer expires, apply the new decision normally
+ * Update signal for a specific intersection based on AI decision.
  */
-function updateSignal(decision) {
+function updateSignal(intersectionId, decision) {
     const now = Date.now();
+    const current = getOrCreateSignal(intersectionId);
 
-    // 🚨 Emergency ALWAYS overrides — even manual mode
+    // 🚨 Emergency ALWAYS overrides
     if (decision.reason === "emergency vehicle") {
-        return forceOverride(decision);
+        return forceOverride(intersectionId, decision);
     }
 
     // 🚫 If current signal is emergency, nothing except another emergency can override
-    if (currentSignal.reason === "emergency vehicle" && currentSignal.endsAt && now < currentSignal.endsAt) {
-        return getSignalState();
+    if (current.reason === "emergency vehicle" && current.endsAt && now < current.endsAt) {
+        return getSignalState(intersectionId);
     }
 
     // 📊 High congestion override — only if >50% of current timer elapsed
-    if (decision.reason === "high traffic" && currentSignal.endsAt && now < currentSignal.endsAt) {
-        const signalStartedAt = currentSignal.endsAt - (currentSignal.duration * 1000);
+    if (decision.reason === "high traffic" && current.endsAt && now < current.endsAt) {
+        const signalStartedAt = current.endsAt - (current.duration * 1000);
         const elapsed = now - signalStartedAt;
-        const halfDuration = (currentSignal.duration * 1000) / 2;
+        const halfDuration = (current.duration * 1000) / 2;
 
         if (elapsed > halfDuration) {
-            return forceOverride(decision);
+            return forceOverride(intersectionId, decision);
         }
     }
 
-    // ⏱️ Normal: if current signal still running → do nothing, return remaining time
-    if (currentSignal.endsAt && now < currentSignal.endsAt) {
-        return getSignalState();
+    // ⏱️ Normal: if current signal still running → just update the next-lane prediction
+    if (current.endsAt && now < current.endsAt) {
+        // Update next lane even if timer is running
+        current.next_lane = decision.active_lane;
+        current.next_reason = decision.reason;
+        current.next_duration = decision.duration;
+        return getSignalState(intersectionId);
     }
 
     // ✅ Timer expired or no active signal → apply new decision
-    currentSignal = {
+    signals[intersectionId] = {
         active_lane: decision.active_lane,
         endsAt: now + decision.duration * 1000,
         mode: "AUTO",
         reason: decision.reason,
-        duration: decision.duration
+        duration: decision.duration,
+        next_lane: decision.next_lane || null,
+        next_reason: decision.next_reason || null,
+        next_duration: decision.next_duration || null
     };
 
-    return getSignalState();
+    return getSignalState(intersectionId);
 }
 
 /**
- * Manual override by operator.
- * Sets a specific lane green for a given duration.
- * Can still be interrupted by emergency signals.
+ * Manual override for a specific intersection.
+ * Stores the next_lane so user knows what comes after manual override expires.
  */
-function manualOverride(lane, duration) {
-    currentSignal = {
+function manualOverride(intersectionId, lane, duration, nextLane) {
+    const current = getOrCreateSignal(intersectionId);
+
+    signals[intersectionId] = {
         active_lane: lane,
         endsAt: Date.now() + duration * 1000,
         mode: "MANUAL",
         reason: "manual override",
-        duration: duration
+        duration: duration,
+        // Keep existing next_lane prediction from AI, or use provided one
+        next_lane: nextLane || current.next_lane || null,
+        next_reason: current.next_reason || null,
+        next_duration: current.next_duration || null
     };
-
-    return getSignalState();
+    return getSignalState(intersectionId);
 }
 
 /**
- * Get the full signal state including computed remaining seconds.
+ * Get the full signal state for an intersection.
  */
-function getSignalState() {
+function getSignalState(intersectionId) {
+    const current = getOrCreateSignal(intersectionId);
     const now = Date.now();
     let remainingSeconds = 0;
     let isExpired = true;
 
-    if (currentSignal.endsAt) {
-        const remaining = currentSignal.endsAt - now;
+    if (current.endsAt) {
+        const remaining = current.endsAt - now;
         if (remaining > 0) {
             remainingSeconds = Math.ceil(remaining / 1000);
             isExpired = false;
@@ -104,24 +132,35 @@ function getSignalState() {
     }
 
     return {
-        active_lane: currentSignal.active_lane,
-        mode: currentSignal.mode,
-        reason: currentSignal.reason,
-        duration: currentSignal.duration,
+        intersection_id: intersectionId,
+        active_lane: current.active_lane,
+        mode: current.mode,
+        reason: current.reason,
+        duration: current.duration,
         remainingSeconds,
         isExpired,
-        endsAt: currentSignal.endsAt
+        endsAt: current.endsAt,
+        next_lane: current.next_lane,
+        next_reason: current.next_reason,
+        next_duration: current.next_duration
     };
 }
 
-function getCurrentSignal() {
-    return getSignalState();
+/**
+ * Get all signal states across all intersections.
+ */
+function getAllSignalStates() {
+    const result = {};
+    for (const id of Object.keys(signals)) {
+        result[id] = getSignalState(id);
+    }
+    return result;
 }
 
 module.exports = {
     updateSignal,
     manualOverride,
-    getCurrentSignal,
     getSignalState,
+    getAllSignalStates,
     forceOverride
 };

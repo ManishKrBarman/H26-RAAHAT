@@ -1,18 +1,20 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-function ManualControlPanel() {
+function ManualControlPanel({ selectedIntersection }) {
   const [lane, setLane] = useState("A");
   const [duration, setDuration] = useState(15);
   const [signalState, setSignalState] = useState(null);
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // Poll signal state
+  const intId = selectedIntersection || "default";
+
+  // Poll signal state for the selected intersection
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await axios.get("http://localhost:3000/traffic/signal");
+        const res = await axios.get(`http://localhost:3000/traffic/signal/${intId}`);
         setSignalState(res.data);
         setCountdown(res.data.remainingSeconds || 0);
       } catch (err) {
@@ -20,12 +22,13 @@ function ManualControlPanel() {
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [intId]);
 
   const handleOverride = async () => {
     setLoading(true);
     try {
       await axios.post("http://localhost:3000/traffic/manual", {
+        intersection_id: intId,
         lane,
         duration: Number(duration)
       });
@@ -38,6 +41,8 @@ function ManualControlPanel() {
   const mode = signalState?.mode || "—";
   const activeLane = signalState?.active_lane || "—";
   const reason = signalState?.reason || "—";
+  const nextLane = signalState?.next_lane;
+  const nextReason = signalState?.next_reason;
 
   return (
     <div className="manual-control-panel">
@@ -52,6 +57,10 @@ function ManualControlPanel() {
 
         <div className="signal-status-body">
           <div className="signal-stat-row">
+            <span className="stat-label">Intersection</span>
+            <span className="stat-value" style={{ fontSize: "10px" }}>{intId}</span>
+          </div>
+          <div className="signal-stat-row">
             <span className="stat-label">Active Lane</span>
             <span className="stat-value lane-value">{activeLane}</span>
           </div>
@@ -64,10 +73,7 @@ function ManualControlPanel() {
           <div className="countdown-section">
             <div className="countdown-ring">
               <svg viewBox="0 0 80 80" className="countdown-svg">
-                <circle
-                  cx="40" cy="40" r="34"
-                  className="countdown-bg-circle"
-                />
+                <circle cx="40" cy="40" r="34" className="countdown-bg-circle" />
                 <circle
                   cx="40" cy="40" r="34"
                   className="countdown-fg-circle"
@@ -83,6 +89,17 @@ function ManualControlPanel() {
             </div>
             <span className="countdown-label">remaining</span>
           </div>
+
+          {/* Next Signal Prediction */}
+          {nextLane && (
+            <div className="next-signal-card">
+              <span className="next-signal-label">⏭️ Next Signal</span>
+              <div className="next-signal-info">
+                <span className="next-lane-badge">Lane {nextLane}</span>
+                <span className="next-reason">{nextReason || "—"}</span>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -108,9 +125,7 @@ function ManualControlPanel() {
         <div className="override-field">
           <label className="override-label">Duration (seconds)</label>
           <input
-            type="range"
-            min="5"
-            max="120"
+            type="range" min="5" max="120"
             value={duration}
             onChange={(e) => setDuration(e.target.value)}
             className="duration-slider"
@@ -125,6 +140,13 @@ function ManualControlPanel() {
         >
           {loading ? "Applying..." : "⚡ Apply Override"}
         </button>
+
+        {/* Show what comes next after override */}
+        {nextLane && (
+          <p className="override-note" style={{ color: "#38bdf8" }}>
+            After override expires → Lane {nextLane} ({nextReason || "auto"})
+          </p>
+        )}
 
         <p className="override-note">
           ⚠️ Emergency vehicles will automatically override manual signals

@@ -4,7 +4,7 @@ const Intersection = require("../models/intersection.model");
 const { uploadToGridFS, getDownloadStream } = require("../utils/gridfs");
 const { analyzeVideo } = require("../services/model.service");
 const { decideSignal } = require("../services/decision.service");
-const { updateSignal, getSignalState } = require("../services/signal.controller");
+const { updateSignal } = require("../services/signal.controller");
 
 // Multer: store in memory → then push to GridFS
 const upload = multer({
@@ -20,9 +20,8 @@ const upload = multer({
 }).single("video");
 
 /**
- * Upload a video for a specific lane of an intersection
+ * Upload a video for a specific lane — UPLOAD ONLY, no analysis.
  * POST /video/upload
- * Form data: video (file), intersection_id, lane_id
  */
 exports.uploadVideo = async (req, res) => {
     upload(req, res, async (err) => {
@@ -42,13 +41,13 @@ exports.uploadVideo = async (req, res) => {
             // Verify intersection exists
             const intersection = await Intersection.findOne({ intersection_id });
             if (!intersection) {
-                return res.status(404).json({ error: `Intersection '${intersection_id}' not found. Register it first.` });
+                return res.status(404).json({ error: `Intersection '${intersection_id}' not found.` });
             }
 
             // Verify lane belongs to this intersection
             if (!intersection.lanes.includes(lane_id)) {
                 return res.status(400).json({
-                    error: `Lane '${lane_id}' doesn't exist on intersection '${intersection_id}'. Valid lanes: ${intersection.lanes.join(", ")}`
+                    error: `Lane '${lane_id}' doesn't exist. Valid: ${intersection.lanes.join(", ")}`
                 });
             }
 
@@ -59,7 +58,7 @@ exports.uploadVideo = async (req, res) => {
                 lane_id
             });
 
-            // Save video metadata
+            // Save video metadata — status stays "uploaded" (NOT processed yet)
             const video = await Video.create({
                 intersection_id,
                 lane_id,
@@ -72,11 +71,8 @@ exports.uploadVideo = async (req, res) => {
 
             console.log(`📹 Video uploaded: ${filename} (${(req.file.size / 1024 / 1024).toFixed(1)}MB)`);
 
-            // Trigger async processing (don't await — let it run in background)
-            processVideoAsync(video._id, intersection_id, lane_id);
-
             res.status(201).json({
-                message: "Video uploaded successfully. Processing started.",
+                message: "Video uploaded. Click 'Analyze' when ready.",
                 video: {
                     id: video._id,
                     intersection_id,
@@ -94,102 +90,120 @@ exports.uploadVideo = async (req, res) => {
 };
 
 /**
- * Process video asynchronously — called after upload
- * Updates status: uploaded → processing → analyzed/error
+ * Analyze all uploaded (unprocessed) videos for an intersection.
+ * POST /video/analyze/:intersection_id
+ * 
+ * This is the "Analyze All" button — processes all uploaded videos,
+ * then runs the signal decision engine.
  */
-async function processVideoAsync(videoId, intersectionId, laneId) {
+exports.analyzeIntersection = async (req, res) => {
     try {
-        // Mark as processing
-        await Video.findByIdAndUpdate(videoId, { status: "processing" });
-        console.log(`🔄 Processing video ${videoId}...`);
+        const { intersection_id } = req.params;
 
-        // Call AI model (mock for now, real .pkl later)
-        const analysis = await analyzeVideo(
-            videoId.toString(), // In real model, this would be the video path/stream
-            intersectionId,
-            laneId
-        );
+        const intersection = await Intersection.findOne({ intersection_id });
+        if (!intersection) {
+            return res.status(404).json({ error: "Intersection not found" });
+        }
 
-        // Save analysis results
-        await Video.findByIdAndUpdate(videoId, {
-            status: "analyzed",
-            analysis,
-            analyzedAt: new Date()
+        // Find all unprocessed videos for this intersection
+        const unprocessed = await Video.find({
+            intersection_id,
+            status: "uploaded"
         });
 
-        console.log(`✅ Video analyzed: ${intersectionId}/${laneId}`, analysis);
+        if (unprocessed.length === 0) {
+            // Even with no new uploads, re-run decision on existing analyzed data
+            const decision = await runSignalDecision(intersection_id, intersection.lanes);
+            return res.json({
+                message: "No new videos to process. Re-ran signal decision.",
+                processed: 0,
+                decision
+            });
+        }
 
-        // After analysis, run signal decision for this intersection
-        await runSignalDecisionForIntersection(intersectionId);
+        console.log(`🔄 Analyzing ${unprocessed.length} videos for ${intersection_id}...`);
 
-    } catch (err) {
-        console.error(`❌ Processing error for video ${videoId}:`, err.message);
-        await Video.findByIdAndUpdate(videoId, {
-            status: "error",
-            error: err.message
-        });
-    }
-}
+        // Process each video
+        const results = [];
+        for (const video of unprocessed) {
+            try {
+                await Video.findByIdAndUpdate(video._id, { status: "processing" });
 
-/**
- * After a video is analyzed, gather all latest lane analyses for the intersection
- * and run the signal decision engine.
- */
-async function runSignalDecisionForIntersection(intersectionId) {
-    try {
-        const intersection = await Intersection.findOne({ intersection_id: intersectionId });
-        if (!intersection) return;
+                const analysis = await analyzeVideo(
+                    video._id.toString(),
+                    intersection_id,
+                    video.lane_id
+                );
 
-        // Get latest analyzed video for each lane
-        const lanes = [];
-        for (const laneId of intersection.lanes) {
-            const latestVideo = await Video.findOne({
-                intersection_id: intersectionId,
-                lane_id: laneId,
-                status: "analyzed"
-            }).sort({ analyzedAt: -1 });
-
-            if (latestVideo && latestVideo.analysis) {
-                lanes.push({
-                    lane: laneId,
-                    ...latestVideo.analysis
+                await Video.findByIdAndUpdate(video._id, {
+                    status: "analyzed",
+                    analysis,
+                    analyzedAt: new Date()
                 });
+
+                results.push({ lane: video.lane_id, status: "analyzed", analysis });
+                console.log(`  ✅ ${video.lane_id}:`, analysis);
+            } catch (err) {
+                await Video.findByIdAndUpdate(video._id, {
+                    status: "error",
+                    error: err.message
+                });
+                results.push({ lane: video.lane_id, status: "error", error: err.message });
+                console.error(`  ❌ ${video.lane_id}:`, err.message);
             }
         }
 
-        if (lanes.length === 0) {
-            console.log(`⏳ No analyzed lanes yet for ${intersectionId}`);
-            return;
-        }
+        // Run signal decision after all videos are processed
+        const decision = await runSignalDecision(intersection_id, intersection.lanes);
 
-        // Run decision engine
-        const decision = decideSignal(lanes);
-        const signal = updateSignal(decision);
+        res.json({
+            message: `Analyzed ${results.length} videos.`,
+            processed: results.length,
+            results,
+            decision
+        });
 
-        console.log(`🚦 Signal decision for ${intersectionId}:`, decision);
     } catch (err) {
-        console.error(`Decision error for ${intersectionId}:`, err.message);
-    }
-}
-
-/**
- * Get all videos for an intersection, with latest per lane first
- * GET /video/intersection/:id
- */
-exports.getVideosByIntersection = async (req, res) => {
-    try {
-        const videos = await Video.find({
-            intersection_id: req.params.id
-        }).sort({ uploadedAt: -1 });
-
-        res.json(videos);
-    } catch (err) {
+        console.error("Analyze error:", err);
         res.status(500).json({ error: err.message });
     }
 };
 
 /**
- * Get latest video + analysis for each lane of an intersection
+ * Gather latest analyses per lane and run signal decision engine.
+ */
+async function runSignalDecision(intersectionId, laneIds) {
+    const lanes = [];
+
+    for (const laneId of laneIds) {
+        const latestVideo = await Video.findOne({
+            intersection_id: intersectionId,
+            lane_id: laneId,
+            status: "analyzed"
+        }).sort({ analyzedAt: -1 });
+
+        if (latestVideo && latestVideo.analysis) {
+            lanes.push({
+                lane: laneId,
+                ...latestVideo.analysis
+            });
+        }
+    }
+
+    if (lanes.length === 0) {
+        return { message: "No analyzed data available" };
+    }
+
+    const decision = decideSignal(lanes);
+    const signal = updateSignal(intersectionId, decision);
+
+    console.log(`🚦 Signal for ${intersectionId}: Lane ${decision.active_lane} (${decision.reason})`);
+
+    return { decision, signal, lanes };
+}
+
+/**
+ * Get latest video per lane for an intersection
  * GET /video/latest/:intersection_id
  */
 exports.getLatestByIntersection = async (req, res) => {
@@ -222,6 +236,21 @@ exports.getLatestByIntersection = async (req, res) => {
 };
 
 /**
+ * Get all videos for an intersection
+ * GET /video/intersection/:id
+ */
+exports.getVideosByIntersection = async (req, res) => {
+    try {
+        const videos = await Video.find({
+            intersection_id: req.params.id
+        }).sort({ uploadedAt: -1 });
+        res.json(videos);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+};
+
+/**
  * Get processing status of a specific video
  * GET /video/status/:id
  */
@@ -231,16 +260,13 @@ exports.getVideoStatus = async (req, res) => {
         if (!video) {
             return res.status(404).json({ error: "Video not found" });
         }
-
         res.json({
             id: video._id,
             intersection_id: video.intersection_id,
             lane_id: video.lane_id,
             status: video.status,
             analysis: video.analysis,
-            error: video.error,
-            uploadedAt: video.uploadedAt,
-            analyzedAt: video.analyzedAt
+            error: video.error
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -262,12 +288,9 @@ exports.streamVideo = async (req, res) => {
         res.set("Content-Disposition", `inline; filename="${video.filename}"`);
 
         const downloadStream = getDownloadStream(video.file_id);
-
-        downloadStream.on("error", (err) => {
-            console.error("Stream error:", err);
-            res.status(404).json({ error: "Video file not found in storage" });
+        downloadStream.on("error", () => {
+            res.status(404).json({ error: "Video file not found" });
         });
-
         downloadStream.pipe(res);
     } catch (err) {
         res.status(500).json({ error: err.message });

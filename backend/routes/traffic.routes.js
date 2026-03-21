@@ -13,6 +13,6 @@ router.post("/analyze", analyzeTraffic);
 router.get("/current", getCurrent);
 router.get("/history", getHistory);
 router.post("/manual", manualControl);
-router.get("/signal", getSignalStatus);
+router.get("/signal/:intersection_id", getSignalStatus);
 
 module.exports = router;

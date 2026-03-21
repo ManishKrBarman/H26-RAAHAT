@@ -38,7 +38,8 @@
     background: #020617;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 12px;
+    overflow-y: auto;
 }
 
 /* ===== RIGHT ===== */
@@ -161,17 +162,180 @@
 }
 
 
-.hover-info {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(0, 0, 0, 0.85);
-    padding: 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    color: white;
-    z-index: 1000;
+/* ═══════════════════════════════════════════════════════
+   MAP — Premium Dark Theme
+   ═══════════════════════════════════════════════════════ */
+
+.map-wrapper {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e293b;
+    flex-shrink: 0;
 }
+
+.map-container {
+    height: 340px;
+    width: 100%;
+    z-index: 1;
+}
+
+/* Dark popup override */
+.leaflet-popup-content-wrapper {
+    background: #0f172a !important;
+    color: #e2e8f0 !important;
+    border: 1px solid #1e293b !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-tip {
+    background: #0f172a !important;
+    border: 1px solid #1e293b !important;
+}
+
+.map-popup-content {
+    padding: 2px;
+}
+
+.popup-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 2px;
+}
+
+.popup-id {
+    font-size: 9px;
+    font-family: monospace;
+    color: #64748b;
+    margin-bottom: 6px;
+}
+
+.popup-signal {
+    font-size: 11px;
+    color: #00e676;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.popup-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.popup-lanes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
+.popup-lane-chip {
+    font-size: 9px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #1e293b;
+    color: #94a3b8;
+}
+
+.popup-lane-chip.high { background: #3a1500; color: #fb923c; }
+.popup-lane-chip.medium { background: #3a2900; color: #facc15; }
+.popup-lane-chip.critical { background: #3a0000; color: #ff3d3d; }
+
+/* Map Overlay Legend */
+.map-overlay-legend {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 8px 10px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.legend-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-dot.emergency-pulse {
+    animation: emgPulse 1s infinite;
+}
+
+@keyframes emgPulse {
+    0%, 100% { box-shadow: 0 0 3px #ff3d3d; }
+    50% { box-shadow: 0 0 10px #ff3d3d, 0 0 20px #ff3d3d55; }
+}
+
+/* Map Hover Tooltip */
+.map-hover-tooltip {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    padding: 8px 12px;
+    z-index: 999;
+    min-width: 130px;
+}
+
+.tooltip-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.tooltip-lane {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #94a3b8;
+    padding: 1px 0;
+}
+
+.tooltip-lane-id {
+    font-weight: 600;
+    color: #cbd5e1;
+    min-width: 42px;
+}
+
+.tooltip-density {
+    font-size: 8px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 3px;
+    text-transform: uppercase;
+}
+
+.tooltip-density.low { background: #00402a; color: #00e676; }
+.tooltip-density.medium { background: #3a2900; color: #facc15; }
+.tooltip-density.high { background: #3a1500; color: #fb923c; }
+.tooltip-density.critical { background: #3a0000; color: #ff3d3d; }
 
 
 /* ═══════════════════════════════════════════════════════
@@ -449,6 +613,44 @@
     font-style: italic;
 }
 
+/* -- Next Signal Prediction -- */
+.next-signal-card {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: rgba(56, 189, 248, 0.06);
+    border: 1px solid rgba(56, 189, 248, 0.15);
+    border-radius: 8px;
+}
+
+.next-signal-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.next-signal-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.next-lane-badge {
+    font-size: 13px;
+    font-weight: 800;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    padding: 2px 10px;
+    border-radius: 6px;
+}
+
+.next-reason {
+    font-size: 10px;
+    color: #94a3b8;
+    font-style: italic;
+}
 
 /* ═══════════════════════════════════════════════════════
    INTERSECTION PANEL (Enhanced)
@@ -690,16 +892,16 @@
 .feed-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1px;
+    gap: 2px;
     background: #1e293b;
 }
 
 .feed-cell {
     background: #0d1428;
-    padding: 6px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
-    min-height: 120px;
+    min-height: 160px;
     transition: all 0.3s ease;
 }
 
@@ -773,12 +975,13 @@
     background: rgba(0, 0, 0, 0.3);
     border-radius: 6px;
     overflow: hidden;
-    min-height: 80px;
+    min-height: 110px;
 }
 
 .feed-video {
     width: 100%;
     height: 100%;
+    max-height: 200px;
     object-fit: cover;
     border-radius: 6px;
 }

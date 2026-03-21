@@ -1,39 +1,56 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-function VideoUploadPanel() {
+function VideoUploadPanel({ selectedIntersection }) {
   const [intersections, setIntersections] = useState([]);
   const [selectedInt, setSelectedInt] = useState("");
   const [selectedLane, setSelectedLane] = useState("");
   const [availableLanes, setAvailableLanes] = useState([]);
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
   const [dragOver, setDragOver] = useState(false);
+  const [uploadedCount, setUploadedCount] = useState(0);
 
   // Fetch registered intersections
   useEffect(() => {
-    axios.get("http://localhost:3000/intersections")
-      .then(res => {
-        setIntersections(res.data);
-        if (res.data.length > 0) {
-          setSelectedInt(res.data[0].intersection_id);
-          setAvailableLanes(res.data[0].lanes);
-          setSelectedLane(res.data[0].lanes[0]);
-        }
-      })
-      .catch(() => {});
+    const fetch = () => {
+      axios.get("http://localhost:3000/intersections")
+        .then(res => {
+          setIntersections(res.data);
+          if (res.data.length > 0 && !selectedInt) {
+            setSelectedInt(res.data[0].intersection_id);
+            setAvailableLanes(res.data[0].lanes);
+            setSelectedLane(res.data[0].lanes[0]);
+          }
+        })
+        .catch(() => {});
+    };
+    fetch();
+    const interval = setInterval(fetch, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Sync with selected intersection from dashboard
+  useEffect(() => {
+    if (selectedIntersection && intersections.length > 0) {
+      setSelectedInt(selectedIntersection);
+    }
+  }, [selectedIntersection, intersections]);
 
   // Update available lanes when intersection changes
   useEffect(() => {
     const int = intersections.find(i => i.intersection_id === selectedInt);
     if (int) {
       setAvailableLanes(int.lanes);
-      setSelectedLane(int.lanes[0]);
+      if (!int.lanes.includes(selectedLane)) {
+        setSelectedLane(int.lanes[0]);
+      }
     }
   }, [selectedInt, intersections]);
 
+  // Upload ONLY — no auto-analysis
   const handleUpload = async () => {
     if (!file || !selectedInt || !selectedLane) return;
 
@@ -46,11 +63,12 @@ function VideoUploadPanel() {
     formData.append("lane_id", selectedLane);
 
     try {
-      const res = await axios.post("http://localhost:3000/video/upload", formData, {
+      await axios.post("http://localhost:3000/video/upload", formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      setUploadResult({ type: "success", message: `✅ Uploaded! Processing started.` });
+      setUploadResult({ type: "success", message: `✅ Lane ${selectedLane} uploaded!` });
       setFile(null);
+      setUploadedCount(prev => prev + 1);
     } catch (err) {
       setUploadResult({
         type: "error",
@@ -58,6 +76,30 @@ function VideoUploadPanel() {
       });
     }
     setUploading(false);
+  };
+
+  // Analyze ALL uploaded videos for the selected intersection
+  const handleAnalyze = async () => {
+    if (!selectedInt) return;
+
+    setAnalyzing(true);
+    setUploadResult(null);
+
+    try {
+      const res = await axios.post(`http://localhost:3000/video/analyze/${selectedInt}`);
+      const data = res.data;
+      setUploadResult({
+        type: "success",
+        message: `✅ Analyzed ${data.processed} videos. ${data.decision?.decision ? `Lane ${data.decision.decision.active_lane} → GREEN` : ""}`
+      });
+      setUploadedCount(0);
+    } catch (err) {
+      setUploadResult({
+        type: "error",
+        message: `❌ ${err.response?.data?.error || err.message}`
+      });
+    }
+    setAnalyzing(false);
   };
 
   const handleDrop = (e) => {
@@ -71,10 +113,10 @@ function VideoUploadPanel() {
 
   return (
     <div className="video-upload-panel">
-      <h4 className="upload-title">📹 Upload Lane Video</h4>
+      <h4 className="upload-title">📹 Upload Lane Videos</h4>
 
       {intersections.length === 0 ? (
-        <p className="upload-note">No intersections registered. Register one first via API.</p>
+        <p className="upload-note">No intersections registered yet.</p>
       ) : (
         <>
           <div className="upload-field">
@@ -131,18 +173,35 @@ function VideoUploadPanel() {
             ) : (
               <div className="drop-placeholder">
                 <span className="drop-icon">📂</span>
-                <span>Drop video here or click to browse</span>
+                <span>Drop video or click to browse</span>
               </div>
             )}
           </div>
 
+          {/* Upload button — upload only */}
           <button
             className="upload-btn"
             onClick={handleUpload}
             disabled={!file || uploading}
+            style={{ marginBottom: "8px" }}
           >
-            {uploading ? "⏳ Uploading..." : "🚀 Upload & Analyze"}
+            {uploading ? "⏳ Uploading..." : `📤 Upload to Lane ${selectedLane}`}
           </button>
+
+          {/* Analyze button — processes all uploaded videos */}
+          <button
+            className="override-btn"
+            onClick={handleAnalyze}
+            disabled={analyzing}
+          >
+            {analyzing ? "⏳ Analyzing..." : "🧠 Analyze & Update Signals"}
+          </button>
+
+          {uploadedCount > 0 && (
+            <p style={{ fontSize: "10px", color: "#38bdf8", textAlign: "center", margin: "6px 0 0" }}>
+              {uploadedCount} video(s) ready for analysis
+            </p>
+          )}
 
           {uploadResult && (
             <div className={`upload-result ${uploadResult.type}`}>

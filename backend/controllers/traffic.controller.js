@@ -1,14 +1,78 @@
 const { decideSignal } = require("../services/decision.service");
 const Traffic = require("../models/traffic.model");
+const Intersection = require("../models/intersection.model");
+const Video = require("../models/video.model");
 const {
     updateSignal,
     manualOverride,
-    getCurrentSignal,
-    getSignalState
+    getSignalState,
+    getAllSignalStates
 } = require("../services/signal.controller");
 
-let currentState = { intersections: [] };
+/**
+ * GET /traffic/current
+ * Build the full current state from DB:
+ *   - All registered intersections
+ *   - Latest video analysis per lane
+ *   - Signal state per intersection
+ */
+exports.getCurrent = async (req, res) => {
+    try {
+        const intersections = await Intersection.find().sort({ createdAt: -1 });
 
+        const result = [];
+        for (const int of intersections) {
+            const lanes = [];
+
+            for (const laneId of int.lanes) {
+                const latestVideo = await Video.findOne({
+                    intersection_id: int.intersection_id,
+                    lane_id: laneId,
+                    status: "analyzed"
+                }).sort({ analyzedAt: -1 });
+
+                lanes.push({
+                    lane: laneId,
+                    vehicle_count: latestVideo?.analysis?.vehicle_count ?? 0,
+                    avg_speed: latestVideo?.analysis?.avg_speed ?? 0,
+                    density: latestVideo?.analysis?.density ?? "low",
+                    emergency: latestVideo?.analysis?.emergency ?? false,
+                    hasVideo: !!latestVideo
+                });
+            }
+
+            const signal = getSignalState(int.intersection_id);
+
+            result.push({
+                id: int.intersection_id,
+                name: int.name,
+                location: int.location,
+                lanes,
+                decision: signal.active_lane ? {
+                    active_lane: signal.active_lane,
+                    reason: signal.reason,
+                    duration: signal.duration,
+                    score: 0
+                } : null,
+                signal
+            });
+        }
+
+        res.json({
+            intersections: result,
+            signalStates: getAllSignalStates()
+        });
+    } catch (err) {
+        console.error("getCurrent error:", err);
+        res.status(500).json({ error: err.message });
+    }
+};
+
+/**
+ * POST /traffic/analyze
+ * Takes intersection data (could be from external source or UI)
+ * and runs the decision engine.
+ */
 exports.analyzeTraffic = async (req, res) => {
     const { intersections } = req.body;
 
@@ -16,10 +80,9 @@ exports.analyzeTraffic = async (req, res) => {
         return res.status(400).json({ error: "Intersections required" });
     }
 
-    // 🧠 Decision per intersection
     const result = intersections.map(int => {
         const decision = decideSignal(int.lanes);
-        const signal = updateSignal(decision);
+        const signal = updateSignal(int.id, decision);
 
         return {
             ...int,
@@ -28,40 +91,42 @@ exports.analyzeTraffic = async (req, res) => {
         };
     });
 
-    currentState = { intersections: result };
+    await Traffic.create({ intersections: result });
 
-    await Traffic.create(currentState);
-
-    console.log("Updated State:", JSON.stringify(currentState, null, 2));
-
-    res.json(currentState);
+    res.json({ intersections: result });
 };
 
+/**
+ * GET /traffic/history
+ */
 exports.getHistory = async (req, res) => {
     const data = await Traffic.find().sort({ createdAt: -1 }).limit(10);
     res.json(data);
 };
 
-exports.getCurrent = (req, res) => {
-    // Attach current signal state to response
-    const signalState = getSignalState();
-    res.json({
-        ...currentState,
-        signalState
-    });
-};
-
+/**
+ * POST /traffic/manual
+ * Manual override for a specific intersection + lane
+ * Body: { intersection_id, lane, duration }
+ */
 exports.manualControl = (req, res) => {
-    const { lane, duration } = req.body;
+    const { intersection_id, lane, duration } = req.body;
 
     if (!lane || !duration) {
-        return res.status(400).json({ error: "Lane and duration required" });
+        return res.status(400).json({ error: "lane and duration required" });
     }
 
-    const signal = manualOverride(lane, duration);
+    // Default to "default" intersection if not specified
+    const intId = intersection_id || "default";
+    const signal = manualOverride(intId, lane, duration);
     res.json(signal);
 };
 
+/**
+ * GET /traffic/signal/:intersection_id
+ * Get signal state for a specific intersection
+ */
 exports.getSignalStatus = (req, res) => {
-    res.json(getSignalState());
+    const intId = req.params.intersection_id || "default";
+    res.json(getSignalState(intId));
 };
