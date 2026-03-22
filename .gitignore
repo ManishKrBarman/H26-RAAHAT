@@ -30,3 +30,5 @@ build/
 
 # ── AI Model (too large for git) ──
 backend/model/*.pkl
+model/*.pt
+model/*.pt.zip

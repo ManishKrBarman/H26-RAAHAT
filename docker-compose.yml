@@ -36,6 +36,27 @@ services:
       - raahat-network
     restart: unless-stopped
 
+  # ── Model Server (Python FastAPI + YOLOv8) ──
+  model:
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    container_name: raahat-model
+    ports:
+      - "${MODEL_PORT:-8000}:8000"
+    environment:
+      MODEL_PORT: 8000
+      BACKEND_URL: http://backend:3000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; r=requests.get('http://localhost:8000/health'); exit(0 if r.ok else 1)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - raahat-network
+    restart: unless-stopped
+
   # ── Backend API ──
   backend:
     build:
@@ -48,8 +69,11 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/raahat
       PORT: 3000
       NODE_ENV: production
+      MODEL_API_URL: http://model:8000/predict
     depends_on:
       mongodb:
+        condition: service_healthy
+      model:
         condition: service_healthy
     networks:
       - raahat-network

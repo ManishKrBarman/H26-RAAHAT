@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -55,49 +55,6 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
   const center = intersections.length
     ? [intersections[0].location.lat, intersections[0].location.lng]
     : [28.6139, 77.2090];
-
-  const isEmergency = intersections.some(int =>
-    int.lanes?.some(l => l.emergency)
-  );
-
-  const corridorPath = intersections
-    .filter(int => int.location)
-    .map(int => [int.location.lat, int.location.lng]);
-
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (!isEmergency) return;
-    const interval = setInterval(() => {
-      setProgress(prev => prev + 0.02);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isEmergency]);
-
-  function interpolate(start, end, t) {
-    return [
-      start[0] + (end[0] - start[0]) * t,
-      start[1] + (end[1] - start[1]) * t,
-    ];
-  }
-
-  let vehiclePosition = corridorPath[0];
-  if (isEmergency && corridorPath.length > 1) {
-    const totalSegments = corridorPath.length - 1;
-    const totalProgress = progress % totalSegments;
-    const index = Math.floor(totalProgress);
-    const t = totalProgress - index;
-    const start = corridorPath[index];
-    const end = corridorPath[index + 1];
-    if (start && end) vehiclePosition = interpolate(start, end, t);
-  }
-
-  const ambulanceIcon = L.divIcon({
-    html: `<div style="font-size:24px;filter:drop-shadow(0 0 6px red);">🚑</div>`,
-    className: "",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
 
   function getIcon(int) {
     const hasEmergency = int.lanes?.some(l => l.emergency);
@@ -198,26 +155,6 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
             </Popup>
           </Marker>
         ))}
-
-        {/* Emergency corridor path */}
-        {isEmergency && corridorPath.length > 1 && (
-          <Polyline
-            positions={corridorPath}
-            pathOptions={{
-              color: "#ff3d3d",
-              weight: 4,
-              dashArray: "10 8",
-              opacity: 0.8
-            }}
-          />
-        )}
-
-        {/* Ambulance marker */}
-        {isEmergency && vehiclePosition && corridorPath.length > 1 && (
-          <Marker position={vehiclePosition} icon={ambulanceIcon}>
-            <Popup>🚑 Emergency Vehicle</Popup>
-          </Marker>
-        )}
       </MapContainer>
 
       {/* Hover tooltip */}
