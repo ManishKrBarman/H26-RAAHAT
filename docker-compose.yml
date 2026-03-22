@@ -1,0 +1,83 @@
+# ═══════════════════════════════════════════════════════
+#  Raahat — Docker Compose
+#
+#  Usage:
+#    docker compose up -d          # start all services
+#    docker compose up -d --build  # rebuild after code changes
+#    docker compose down            # stop all
+#    docker compose down -v         # stop + delete database
+#
+#  Ports:
+#    Frontend  →  http://localhost:3000
+#    Backend   →  http://localhost:3001
+#    MongoDB   →  localhost:27017
+#
+#  Override ports/URLs via .env file (see DOCKER.md)
+# ═══════════════════════════════════════════════════════
+
+services:
+
+  # ── MongoDB ──
+  mongodb:
+    image: mongo:7
+    container_name: raahat-mongodb
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    environment:
+      MONGO_INITDB_DATABASE: raahat
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/raahat --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - raahat-network
+    restart: unless-stopped
+
+  # ── Backend API ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: raahat-backend
+    ports:
+      - "${BACKEND_PORT:-3001}:3000"
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/raahat
+      PORT: 3000
+      NODE_ENV: production
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - raahat-network
+    restart: unless-stopped
+
+  # ── Frontend (React + nginx) ──
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # This is baked into the JS bundle at build time.
+        # It tells the browser where to send API requests.
+        # Default: http://localhost:3001 (Docker backend exposed port)
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:3001}
+    container_name: raahat-frontend
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - raahat-network
+    restart: unless-stopped
+
+volumes:
+  mongodb_data:
+    driver: local
+
+networks:
+  raahat-network:
+    driver: bridge

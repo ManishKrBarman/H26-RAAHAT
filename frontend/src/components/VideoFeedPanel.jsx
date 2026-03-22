@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 function VideoFeedPanel({ intersectionId }) {
   const [laneData, setLaneData] = useState({});
@@ -12,11 +13,11 @@ function VideoFeedPanel({ intersectionId }) {
     const fetchData = async () => {
       try {
         // Get intersection info (which lanes exist)
-        const intRes = await axios.get(`http://localhost:3000/intersections/${intersectionId}`);
+        const intRes = await axios.get(`${API_BASE_URL}/intersections/${intersectionId}`);
         setIntersectionInfo(intRes.data);
 
         // Get latest videos per lane
-        const vidRes = await axios.get(`http://localhost:3000/video/latest/${intersectionId}`);
+        const vidRes = await axios.get(`${API_BASE_URL}/video/latest/${intersectionId}`);
         setLaneData(vidRes.data.lanes || {});
       } catch (err) {
         // silent
@@ -74,7 +75,7 @@ function VideoFeedPanel({ intersectionId }) {
                   </div>
                 ) : (
                   <video
-                    src={`http://localhost:3000/video/stream/${video._id}`}
+                    src={`${API_BASE_URL}/video/stream/${video._id}`}
                     controls
                     muted
                     autoPlay

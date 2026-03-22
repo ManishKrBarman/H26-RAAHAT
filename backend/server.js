@@ -3,9 +3,10 @@ const mongoose = require("mongoose");
 const { initGridFS } = require("./utils/gridfs");
 const { startEngine } = require("./services/signal.engine");
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/raahat";
 
-mongoose.connect("mongodb://127.0.0.1:27017/raahat")
+mongoose.connect(MONGODB_URI)
     .then(() => {
         console.log("✅ DB connected");
 

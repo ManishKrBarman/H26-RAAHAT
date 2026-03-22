@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 function ManualControlPanel({ selectedIntersection }) {
   const [lane, setLane] = useState("A");
@@ -14,7 +15,7 @@ function ManualControlPanel({ selectedIntersection }) {
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
-        const res = await axios.get(`http://localhost:3000/traffic/signal/${intId}`);
+        const res = await axios.get(`${API_BASE_URL}/traffic/signal/${intId}`);
         setSignalState(res.data);
         setCountdown(res.data.remainingSeconds || 0);
       } catch (err) {
@@ -27,7 +28,7 @@ function ManualControlPanel({ selectedIntersection }) {
   const handleOverride = async () => {
     setLoading(true);
     try {
-      await axios.post("http://localhost:3000/traffic/manual", {
+      await axios.post(`${API_BASE_URL}/traffic/manual`, {
         intersection_id: intId,
         lane,
         duration: Number(duration)

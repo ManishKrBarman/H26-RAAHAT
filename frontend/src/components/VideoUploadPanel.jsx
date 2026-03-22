@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 function VideoUploadPanel({ selectedIntersection }) {
   const [intersections, setIntersections] = useState([]);
@@ -16,7 +17,7 @@ function VideoUploadPanel({ selectedIntersection }) {
   // Fetch registered intersections
   useEffect(() => {
     const fetch = () => {
-      axios.get("http://localhost:3000/intersections")
+      axios.get(`${API_BASE_URL}/intersections`)
         .then(res => {
           setIntersections(res.data);
           if (res.data.length > 0 && !selectedInt) {
@@ -63,7 +64,7 @@ function VideoUploadPanel({ selectedIntersection }) {
     formData.append("lane_id", selectedLane);
 
     try {
-      await axios.post("http://localhost:3000/video/upload", formData, {
+      await axios.post(`${API_BASE_URL}/video/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       setUploadResult({ type: "success", message: `✅ Lane ${selectedLane} uploaded!` });
@@ -86,7 +87,7 @@ function VideoUploadPanel({ selectedIntersection }) {
     setUploadResult(null);
 
     try {
-      const res = await axios.post(`http://localhost:3000/video/analyze/${selectedInt}`);
+      const res = await axios.post(`${API_BASE_URL}/video/analyze/${selectedInt}`);
       const data = res.data;
       setUploadResult({
         type: "success",

@@ -10,6 +10,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Health check endpoint (used by Docker)
+app.get("/health", (req, res) => {
+    res.json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+});
+
 // Routes
 app.use("/traffic", trafficRoutes);
 app.use("/video", videoRoutes);

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 import "./dashboard.css";
 import AlertsPanel from "../components/AlertsPanel";
 import MapView from "../components/MapView";
@@ -22,7 +23,7 @@ function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/traffic/current");
+        const res = await axios.get(`${API_BASE_URL}/traffic/current`);
         setData(res.data);
 
         // Auto-select first intersection if none selected
