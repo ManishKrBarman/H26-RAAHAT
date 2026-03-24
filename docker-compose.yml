@@ -48,6 +48,8 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/raahat
       PORT: 3000
       NODE_ENV: production
+      MODEL_API_URL: http://model:8000/predict
+      MODEL_TIMEOUT: "120000"
     depends_on:
       mongodb:
         condition: service_healthy
@@ -74,6 +76,24 @@ services:
       - raahat-network
     restart: unless-stopped
 
+  # ── Model Server (Python FastAPI + YOLOv8) ──
+  model:
+    build:
+      context: ./model
+      dockerfile: Dockerfile
+    container_name: raahat-model
+    ports:
+      - "${MODEL_PORT:-8000}:8000"
+    environment:
+      BACKEND_URL: http://backend:3000
+      MODEL_PORT: 8000
+      MODEL_PATH: /app/best2.pt
+    depends_on:
+      - backend
+    networks:
+      - raahat-network
+    restart: unless-stopped
+
 volumes:
   mongodb_data:
     driver: local
@@ -81,3 +101,4 @@ volumes:
 networks:
   raahat-network:
     driver: bridge
+

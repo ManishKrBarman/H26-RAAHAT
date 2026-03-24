@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+httpx
+opencv-python
+ultralytics
+numpy
+pandas
+matplotlib
+seaborn
