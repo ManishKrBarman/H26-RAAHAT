@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -48,7 +48,7 @@ function FitBounds({ intersections }) {
   return null;
 }
 
-function MapView({ data, onSelectIntersection, selectedIntersection }) {
+function MapView({ data, onSelectIntersection, selectedIntersection, theme }) {
   const intersections = data?.intersections || [];
   const [hovered, setHovered] = useState(null);
 
@@ -56,48 +56,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
     ? [intersections[0].location.lat, intersections[0].location.lng]
     : [28.6139, 77.2090];
 
-  const isEmergency = intersections.some(int =>
-    int.lanes?.some(l => l.emergency)
-  );
 
-  const corridorPath = intersections
-    .filter(int => int.location)
-    .map(int => [int.location.lat, int.location.lng]);
-
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    if (!isEmergency) return;
-    const interval = setInterval(() => {
-      setProgress(prev => prev + 0.02);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isEmergency]);
-
-  function interpolate(start, end, t) {
-    return [
-      start[0] + (end[0] - start[0]) * t,
-      start[1] + (end[1] - start[1]) * t,
-    ];
-  }
-
-  let vehiclePosition = corridorPath[0];
-  if (isEmergency && corridorPath.length > 1) {
-    const totalSegments = corridorPath.length - 1;
-    const totalProgress = progress % totalSegments;
-    const index = Math.floor(totalProgress);
-    const t = totalProgress - index;
-    const start = corridorPath[index];
-    const end = corridorPath[index + 1];
-    if (start && end) vehiclePosition = interpolate(start, end, t);
-  }
-
-  const ambulanceIcon = L.divIcon({
-    html: `<div style="font-size:24px;filter:drop-shadow(0 0 6px red);">🚑</div>`,
-    className: "",
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
 
   function getIcon(int) {
     const hasEmergency = int.lanes?.some(l => l.emergency);
@@ -105,7 +64,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
 
     let color = "#22c55e";
     let label = "●";
-    if (hasEmergency) { color = "#ff3d3d"; label = "🚨"; }
+    if (hasEmergency) { color = "#ff3d3d"; label = "!"; }
     else if (int.lanes?.some(l => l.density === "critical")) color = "#ef4444";
     else if (int.lanes?.some(l => l.density === "high")) color = "#fb923c";
     else if (int.lanes?.some(l => l.density === "medium")) color = "#facc15";
@@ -129,7 +88,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
         color:white;
         font-weight:bold;
         transition: all 0.3s ease;
-      ">${hasEmergency ? "🚨" : (int.signal?.active_lane || "")}</div>`,
+      ">${hasEmergency ? "!" : (int.signal?.active_lane || "")}</div>`,
       className: "",
       iconSize: [size, size],
       iconAnchor: [size/2, size/2],
@@ -144,19 +103,31 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
         zoomControl={false}
         className="map-container"
       >
-        {/* Satellite imagery — clearly visible on dark UI */}
-        <TileLayer
-          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-          attribution='&copy; Esri, Maxar, Earthstar'
-          maxZoom={19}
-        />
-        {/* Street labels overlay on top of satellite */}
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
-          subdomains="abcd"
-          maxZoom={19}
-          pane="shadowPane"
-        />
+        {/* Map tiles — switch between satellite (dark) and street (light) */}
+        {theme === "light" ? (
+          <>
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              attribution='&copy; OpenStreetMap, &copy; CARTO'
+              subdomains="abcd"
+              maxZoom={19}
+            />
+          </>
+        ) : (
+          <>
+            <TileLayer
+              url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              attribution='&copy; Esri, Maxar, Earthstar'
+              maxZoom={19}
+            />
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png"
+              subdomains="abcd"
+              maxZoom={19}
+              pane="shadowPane"
+            />
+          </>
+        )}
 
         {/* Fit all intersections in view initially */}
         <FitBounds intersections={intersections} />
@@ -190,7 +161,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
                   {int.lanes?.map((lane, i) => (
                     <span key={i} className={`popup-lane-chip ${lane.density}`}>
                       {lane.lane}: {lane.density}
-                      {lane.emergency && " 🚨"}
+                      {lane.emergency && " ⬤"}
                     </span>
                   ))}
                 </div>
@@ -199,25 +170,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
           </Marker>
         ))}
 
-        {/* Emergency corridor path */}
-        {isEmergency && corridorPath.length > 1 && (
-          <Polyline
-            positions={corridorPath}
-            pathOptions={{
-              color: "#ff3d3d",
-              weight: 4,
-              dashArray: "10 8",
-              opacity: 0.8
-            }}
-          />
-        )}
 
-        {/* Ambulance marker */}
-        {isEmergency && vehiclePosition && corridorPath.length > 1 && (
-          <Marker position={vehiclePosition} icon={ambulanceIcon}>
-            <Popup>🚑 Emergency Vehicle</Popup>
-          </Marker>
-        )}
       </MapContainer>
 
       {/* Hover tooltip */}
@@ -228,7 +181,7 @@ function MapView({ data, onSelectIntersection, selectedIntersection }) {
             <div key={i} className="tooltip-lane">
               <span className="tooltip-lane-id">Lane {lane.lane}</span>
               <span className={`tooltip-density ${lane.density}`}>{lane.density}</span>
-              {lane.emergency && <span>🚨</span>}
+              {lane.emergency && <span className="emergency-indicator">EMG</span>}
             </div>
           ))}
         </div>

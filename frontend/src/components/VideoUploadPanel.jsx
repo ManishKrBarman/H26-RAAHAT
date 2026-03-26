@@ -67,13 +67,13 @@ function VideoUploadPanel({ selectedIntersection }) {
       await axios.post(`${API_BASE_URL}/video/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
-      setUploadResult({ type: "success", message: `✅ Lane ${selectedLane} uploaded!` });
+      setUploadResult({ type: "success", message: `Lane ${selectedLane} uploaded successfully` });
       setFile(null);
       setUploadedCount(prev => prev + 1);
     } catch (err) {
       setUploadResult({
         type: "error",
-        message: `❌ ${err.response?.data?.error || err.message}`
+        message: `Error: ${err.response?.data?.error || err.message}`
       });
     }
     setUploading(false);
@@ -91,13 +91,13 @@ function VideoUploadPanel({ selectedIntersection }) {
       const data = res.data;
       setUploadResult({
         type: "success",
-        message: `✅ Analyzed ${data.processed} videos. ${data.decision?.decision ? `Lane ${data.decision.decision.active_lane} → GREEN` : ""}`
+        message: `Analyzed ${data.processed} videos. ${data.decision?.decision ? `Lane ${data.decision.decision.active_lane} → GREEN` : ""}`
       });
       setUploadedCount(0);
     } catch (err) {
       setUploadResult({
         type: "error",
-        message: `❌ ${err.response?.data?.error || err.message}`
+        message: `Error: ${err.response?.data?.error || err.message}`
       });
     }
     setAnalyzing(false);
@@ -114,7 +114,7 @@ function VideoUploadPanel({ selectedIntersection }) {
 
   return (
     <div className="video-upload-panel">
-      <h4 className="upload-title">📹 Upload Lane Videos</h4>
+      <h4 className="upload-title">Upload Lane Videos</h4>
 
       {intersections.length === 0 ? (
         <p className="upload-note">No intersections registered yet.</p>
@@ -167,13 +167,13 @@ function VideoUploadPanel({ selectedIntersection }) {
             />
             {file ? (
               <div className="file-info">
-                <span className="file-icon">🎬</span>
+                <span className="file-icon">▶</span>
                 <span className="file-name">{file.name}</span>
                 <span className="file-size">({(file.size / 1024 / 1024).toFixed(1)} MB)</span>
               </div>
             ) : (
               <div className="drop-placeholder">
-                <span className="drop-icon">📂</span>
+                <span className="drop-icon">↑</span>
                 <span>Drop video or click to browse</span>
               </div>
             )}
@@ -186,7 +186,7 @@ function VideoUploadPanel({ selectedIntersection }) {
             disabled={!file || uploading}
             style={{ marginBottom: "8px" }}
           >
-            {uploading ? "⏳ Uploading..." : `📤 Upload to Lane ${selectedLane}`}
+            {uploading ? "Uploading..." : `Upload to Lane ${selectedLane}`}
           </button>
 
           {/* Analyze button — processes all uploaded videos */}
@@ -195,7 +195,7 @@ function VideoUploadPanel({ selectedIntersection }) {
             onClick={handleAnalyze}
             disabled={analyzing}
           >
-            {analyzing ? "⏳ Analyzing..." : "🧠 Analyze & Update Signals"}
+            {analyzing ? "Analyzing..." : "Analyze & Update Signals"}
           </button>
 
           {uploadedCount > 0 && (

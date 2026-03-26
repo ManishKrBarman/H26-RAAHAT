@@ -290,14 +290,14 @@ body.emergency-active .emergency-banner {
 }
 
 /* ── Panel Base ─────────────────────────────────────────────────────────── */
-.panel {
+.main-layout > .panel {
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--border);
 }
 
-.panel:last-child {
+.main-layout > .panel:last-child {
   border-right: none;
 }
 

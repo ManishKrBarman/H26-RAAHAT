@@ -23,7 +23,7 @@ function DeviceStatusPanel() {
   if (devices.length === 0) {
     return (
       <div className="device-status-panel">
-        <h4 className="section-heading">📡 Hardware Devices</h4>
+        <h4 className="section-heading">Hardware Devices</h4>
         <p className="empty-state" style={{ fontSize: "11px" }}>
           No ESP32 devices connected.
           <br />
@@ -35,7 +35,7 @@ function DeviceStatusPanel() {
 
   return (
     <div className="device-status-panel">
-      <h4 className="section-heading">📡 Hardware Devices</h4>
+      <h4 className="section-heading">Hardware Devices</h4>
 
       {devices.map((device) => {
         const isOnline = device.status === "online";

@@ -34,7 +34,7 @@ function VideoFeedPanel({ intersectionId }) {
   return (
     <div className="video-feed-panel">
       <div className="feed-header">
-        <span className="feed-title">📹 Live Lane Feeds</span>
+        <span className="feed-title">Live Lane Feeds</span>
         {intersectionId && (
           <span className="feed-int-id">{intersectionId}</span>
         )}
@@ -65,12 +65,12 @@ function VideoFeedPanel({ intersectionId }) {
               <div className="feed-video-container">
                 {!isAvailable ? (
                   <div className="feed-off">
-                    <span className="feed-off-icon">⚫</span>
+                    <span className="feed-off-icon">—</span>
                     <span className="feed-off-text">Not Available</span>
                   </div>
                 ) : !hasVideo ? (
                   <div className="feed-no-video">
-                    <span className="feed-no-icon">📷</span>
+                    <span className="feed-off-icon">—</span>
                     <span className="feed-no-text">No footage</span>
                   </div>
                 ) : (
@@ -88,12 +88,12 @@ function VideoFeedPanel({ intersectionId }) {
               {/* Analysis badge */}
               {isAvailable && analysis && (
                 <div className="feed-analysis">
-                  <span className="feed-stat">🚗 {analysis.vehicle_count}</span>
-                  <span className="feed-stat">⚡ {analysis.avg_speed}</span>
+                  <span className="feed-stat">Vehicles: {analysis.vehicle_count}</span>
+                  <span className="feed-stat">Speed: {analysis.avg_speed}</span>
                   <span className={`feed-density ${analysis.density}`}>
                     {analysis.density}
                   </span>
-                  {analysis.emergency && <span className="feed-emg">🚨</span>}
+                  {analysis.emergency && <span className="feed-emg">EMG</span>}
                 </div>
               )}
 
@@ -101,7 +101,7 @@ function VideoFeedPanel({ intersectionId }) {
               {isAvailable && analysis && (
                 <div className="feed-audio-row">
                   <span className="feed-audio-badge" title={analysis.audio_used ? "Audio analyzed" : "No audio"}>
-                    {analysis.audio_used ? "🔊" : "🔇"}
+                    {analysis.audio_used ? "AUD" : "NO AUD"}
                   </span>
                   <span className="feed-score" title="Final confidence">
                     {(analysis.final_score * 100).toFixed(0)}%

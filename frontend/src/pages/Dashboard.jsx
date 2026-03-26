@@ -15,10 +15,16 @@ function Dashboard() {
   const [data, setData] = useState({ intersections: [] });
   const [alerts, setAlerts] = useState([]);
   const [selectedIntersection, setSelectedIntersection] = useState(null);
+  const [theme, setTheme] = useState(() => localStorage.getItem("raahat-theme") || "dark");
 
   const isEmergency = data.intersections?.some(int =>
     int.lanes?.some(l => l.emergency)
   );
+
+  const toggleTheme = (t) => {
+    setTheme(t);
+    localStorage.setItem("raahat-theme", t);
+  };
 
   // Poll /traffic/current (now built from DB)
   useEffect(() => {
@@ -40,7 +46,7 @@ function Dashboard() {
             if (prev[0]?.type === "emergency") return prev;
             return [
               {
-                message: "🚨 Emergency vehicle detected!",
+                message: "ALERT — Emergency vehicle detected!",
                 time: new Date().toLocaleTimeString(),
                 type: "emergency"
               },
@@ -79,11 +85,27 @@ function Dashboard() {
   }, [selectedIntersection]);
 
   return (
-    <div className={`dashboard ${isEmergency ? "emergency" : ""}`}>
+    <div className={`dashboard ${isEmergency ? "emergency" : ""}`} data-theme={theme}>
+
+      {/* Theme Toggle */}
+      <div className="theme-toggle">
+        <button
+          className={`theme-toggle-btn ${theme === "dark" ? "active" : ""}`}
+          onClick={() => toggleTheme("dark")}
+        >
+          Dark
+        </button>
+        <button
+          className={`theme-toggle-btn ${theme === "light" ? "active" : ""}`}
+          onClick={() => toggleTheme("light")}
+        >
+          Light
+        </button>
+      </div>
 
       {/* LEFT PANEL — Intersections + Upload */}
       <div className="panel left">
-        <h2>🚦 Intersections</h2>
+        <h2>Intersections</h2>
 
         {data.intersections.length === 0 ? (
           <p className="empty-state">
@@ -118,6 +140,7 @@ function Dashboard() {
           data={data}
           onSelectIntersection={setSelectedIntersection}
           selectedIntersection={selectedIntersection}
+          theme={theme}
         />
 
         <VideoFeedPanel intersectionId={selectedIntersection} />
@@ -125,7 +148,7 @@ function Dashboard() {
 
       {/* RIGHT PANEL — Control Center + Activity */}
       <div className="panel right">
-        <h2>🎛️ Control Center</h2>
+        <h2>Control Center</h2>
 
         <ManualControlPanel selectedIntersection={selectedIntersection} />
 
@@ -134,7 +157,7 @@ function Dashboard() {
         </div>
 
         <div className="right-section-divider">
-          <h3 className="section-heading">📋 Activity Log</h3>
+          <h3 className="section-heading">Activity Log</h3>
           <AlertsPanel alerts={alerts} />
         </div>
       </div>

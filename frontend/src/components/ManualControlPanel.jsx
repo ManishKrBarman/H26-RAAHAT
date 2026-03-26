@@ -94,7 +94,7 @@ function ManualControlPanel({ selectedIntersection }) {
           {/* Next Signal Prediction */}
           {nextLane && (
             <div className="next-signal-card">
-              <span className="next-signal-label">⏭️ Next Signal</span>
+              <span className="next-signal-label">Next Signal</span>
               <div className="next-signal-info">
                 <span className="next-lane-badge">Lane {nextLane}</span>
                 <span className="next-reason">{nextReason || "—"}</span>
@@ -106,7 +106,7 @@ function ManualControlPanel({ selectedIntersection }) {
 
       {/* Manual Override Controls */}
       <div className="override-card">
-        <h4 className="override-title">🎛️ Manual Override</h4>
+        <h4 className="override-title">Manual Override</h4>
 
         <div className="override-field">
           <label className="override-label">Lane</label>
@@ -139,7 +139,7 @@ function ManualControlPanel({ selectedIntersection }) {
           onClick={handleOverride}
           disabled={loading}
         >
-          {loading ? "Applying..." : "⚡ Apply Override"}
+          {loading ? "Applying..." : "Apply Override"}
         </button>
 
         {/* Show what comes next after override */}
@@ -150,10 +150,10 @@ function ManualControlPanel({ selectedIntersection }) {
         )}
 
         <p className="override-note">
-          ⚠️ Emergency vehicles will automatically override manual signals
+          Emergency vehicles will automatically override manual signals
         </p>
         <p className="override-note" style={{ color: "#f59e0b" }}>
-          🟡 During manual override, all yellow signals will blink on the ESP32 to indicate caution — traffic can still proceed carefully.
+          During manual override, all yellow signals will blink on the ESP32 to indicate caution — traffic can still proceed carefully.
         </p>
       </div>
     </div>

@@ -8,7 +8,7 @@ function IntersectionPanel({ intersection, isSelected }) {
   return (
     <div className={`int-panel-card ${isSelected ? "selected" : ""}`}>
       <div className="int-panel-header">
-        <h3 className="int-panel-title">🚦 {id}</h3>
+        <h3 className="int-panel-title">{id}</h3>
         <span className={`int-mode-badge ${mode === "MANUAL" ? "manual" : "auto"}`}>
           {mode}
         </span>
@@ -43,7 +43,7 @@ function IntersectionPanel({ intersection, isSelected }) {
           color: "#f59e0b",
           textAlign: "center"
         }}>
-          🟡 Yellow signals blinking — caution mode
+          Yellow signals blinking — caution mode
         </div>
       )}
 
@@ -59,7 +59,7 @@ function IntersectionPanel({ intersection, isSelected }) {
             >
               <span className="lane-letter">{lane.lane}</span>
               <span className="lane-density">{isYellow ? "caution" : lane.density}</span>
-              {lane.emergency && <span className="lane-emg">🚨</span>}
+              {lane.emergency && <span className="lane-emg">EMG</span>}
             </div>
           );
         })}

@@ -33,7 +33,7 @@ function SignalGrid({ lanes, activeLane, mode }) {
           gap: "8px",
           animation: "yellowPulse 1.5s ease-in-out infinite"
         }}>
-          <span style={{ fontSize: "18px" }}>⚠️</span>
+          <span style={{ fontSize: "13px", fontWeight: 700 }}>WARNING</span>
           <span style={{ color: "#f59e0b", fontWeight: 600, fontSize: "13px" }}>
             Manual Override Active — Yellow signals blinking (caution)
           </span>
@@ -58,8 +58,8 @@ function SignalGrid({ lanes, activeLane, mode }) {
           >
             {/* HEADER */}
             <h3>
-              Lane {lane.lane} {isActive && "🟢 ACTIVE"}
-              {isYellow && " 🟡 CAUTION"}
+              Lane {lane.lane} {isActive && " — ACTIVE"}
+              {isYellow && " — CAUTION"}
             </h3>
 
             {/* SIGNAL LIGHT */}
@@ -76,13 +76,13 @@ function SignalGrid({ lanes, activeLane, mode }) {
             </div>
 
             {/* DATA */}
-            <p>🚗 Vehicles: {lane.vehicle_count}</p>
-            <p>⚡ Speed: {lane.avg_speed}</p>
-            <p>📊 Density: {lane.density}</p>
+            <p>Vehicles: {lane.vehicle_count}</p>
+            <p>Speed: {lane.avg_speed}</p>
+            <p>Density: {lane.density}</p>
 
             {/* EMERGENCY */}
             {lane.emergency && (
-              <p style={{ color: "red" }}>🚨 Emergency Detected</p>
+              <p style={{ color: "red", fontWeight: 700 }}>EMERGENCY DETECTED</p>
             )}
           </div>
         );

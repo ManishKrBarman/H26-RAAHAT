@@ -15,7 +15,7 @@ const axios = require("axios");
 // ══════════════════ CONFIG ══════════════════
 const USE_REAL_MODEL = true;
 const MODEL_API_URL = process.env.MODEL_API_URL || "http://localhost:8000/predict";
-const MODEL_TIMEOUT = parseInt(process.env.MODEL_TIMEOUT || "120000", 10);
+const MODEL_TIMEOUT = parseInt(process.env.MODEL_TIMEOUT || "240000", 10);
 // ════════════════════════════════════════════
 
 /**
