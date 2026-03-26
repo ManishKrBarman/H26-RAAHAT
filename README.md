@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/🚦_RAAHAT-AI_Traffic_Management-ff6b35?style=for-the-badge&labelColor=1a1a2e" alt="Raahat" />
+  <img src="https://img.shields.io/badge/RAAHAT-AI_Traffic_Management-ff6b35?style=for-the-badge&labelColor=1a1a2e" alt="Raahat" />
   <br />
   <h1 align="center">Raahat — AI-Powered Smart Traffic Management System</h1>
   <p align="center">
     <em>Real-time traffic signal optimization using computer vision, audio analysis, and IoT hardware</em>
     <br /><br />
-    <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick_Start-▶-28a745?style=flat-square" alt="Quick Start" /></a>
+    <a href="#quick-start"><img src="https://img.shields.io/badge/Quick_Start-Get_Started-28a745?style=flat-square" alt="Quick Start" /></a>
     &nbsp;
-    <a href="DOCKER.md"><img src="https://img.shields.io/badge/Docker_Guide-🐳-2496ED?style=flat-square" alt="Docker Guide" /></a>
+    <a href="DOCKER.md"><img src="https://img.shields.io/badge/Docker_Guide-Deployment-2496ED?style=flat-square" alt="Docker Guide" /></a>
     &nbsp;
-    <a href="esp32/README.md"><img src="https://img.shields.io/badge/ESP32_Setup-📡-E7352C?style=flat-square" alt="ESP32 Setup" /></a>
+    <a href="esp32/README.md"><img src="https://img.shields.io/badge/ESP32_Setup-Hardware-E7352C?style=flat-square" alt="ESP32 Setup" /></a>
   </p>
   <p align="center">
     <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white" />
@@ -24,27 +24,27 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [About the Project](#-about-the-project)
-- [Key Features](#-key-features)
-- [System Architecture](#-system-architecture)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Quick Start](#-quick-start)
-- [Local Development Setup](#-local-development-setup)
-- [Docker Deployment](#-docker-deployment)
-- [API Reference](#-api-reference)
-- [AI Models](#-ai-models)
-- [ESP32 Hardware Integration](#-esp32-hardware-integration)
-- [Screenshots](#-screenshots)
-- [Contributing](#-contributing)
-- [Team](#-team)
-- [License](#-license)
+- [About the Project](#about-the-project)
+- [Key Features](#key-features)
+- [System Architecture](#system-architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Quick Start](#quick-start)
+- [Local Development Setup](#local-development-setup)
+- [Docker Deployment](#docker-deployment)
+- [API Reference](#api-reference)
+- [AI Models](#ai-models)
+- [ESP32 Hardware Integration](#esp32-hardware-integration)
+- [Screenshots](#screenshots)
+- [Contributing](#contributing)
+- [Team](#team)
+- [License](#license)
 
 ---
 
-## 🔍 About the Project
+## About the Project
 
 **Raahat** (meaning *"relief"* in Hindi/Urdu) is an intelligent traffic management system that uses AI-powered video and audio analysis to make real-time traffic signal decisions. The system processes live traffic footage through a $\color{orange}{\textsf{YOLOv8}}$ object detection model and a custom $\color{cyan}{\textsf{Audio CNN}}$ classification model to:
 
@@ -58,29 +58,29 @@
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | | Feature | Description |
 |:-:|---------|-------------|
-| 🎥 | ![Video Analysis](https://img.shields.io/badge/Video_Analysis-FF6F00?style=flat-square) | YOLOv8-based vehicle detection, counting, speed estimation, and density classification |
-| 🔊 | ![Audio Analysis](https://img.shields.io/badge/Audio_Analysis-9B59B6?style=flat-square) | Mel-spectrogram CNN model to detect emergency sirens (ambulance / fire truck) from video audio |
-| 🧠 | ![Sensor Fusion](https://img.shields.io/badge/Sensor_Fusion-E74C3C?style=flat-square) | Weighted fusion of video (40%) and audio (60%) scores for robust emergency detection |
-| ⚡ | ![Signal Engine](https://img.shields.io/badge/Signal_Engine-F39C12?style=flat-square) | Background engine (1s tick) that evaluates all lanes and switches signals automatically |
-| 🔄 | ![Fairness](https://img.shields.io/badge/Lane_Rotation-2ECC71?style=flat-square) | Score-based penalty system ensures all lanes get green time, preventing starvation |
-| 🚨 | ![Emergency](https://img.shields.io/badge/Emergency_Override-FF0000?style=flat-square) | Emergency vehicles trigger instant signal override — bypasses timers |
-| 🎛️ | ![Manual](https://img.shields.io/badge/Manual_Control-3498DB?style=flat-square) | Dashboard-based manual signal override for traffic operators |
-| 🗺️ | ![Map](https://img.shields.io/badge/Interactive_Map-1ABC9C?style=flat-square) | Leaflet-powered map with intersection markers and real-time signal status |
-| 📹 | ![Video](https://img.shields.io/badge/Video_Upload-8E44AD?style=flat-square) | Upload traffic videos per lane, stream them from GridFS, and view analysis results |
-| 📡 | ![ESP32](https://img.shields.io/badge/ESP32_IoT-E7352C?style=flat-square) | Physical LED traffic signals controlled via WiFi, synced with the dashboard |
-| 🐳 | ![Docker](https://img.shields.io/badge/Docker_Ready-2496ED?style=flat-square) | Full-stack containerized deployment with a single `docker compose up` |
+|![Video Analysis](https://img.shields.io/badge/Video_Analysis-FF6F00?style=flat-square) | YOLOv8-based vehicle detection, counting, speed estimation, and density classification |
+|![Audio Analysis](https://img.shields.io/badge/Audio_Analysis-9B59B6?style=flat-square) | Mel-spectrogram CNN model to detect emergency sirens (ambulance / fire truck) from video audio |
+|![Sensor Fusion](https://img.shields.io/badge/Sensor_Fusion-E74C3C?style=flat-square) | Weighted fusion of video (40%) and audio (60%) scores for robust emergency detection |
+|![Signal Engine](https://img.shields.io/badge/Signal_Engine-F39C12?style=flat-square) | Background engine (1s tick) that evaluates all lanes and switches signals automatically |
+|![Fairness](https://img.shields.io/badge/Lane_Rotation-2ECC71?style=flat-square) | Score-based penalty system ensures all lanes get green time, preventing starvation |
+|![Emergency](https://img.shields.io/badge/Emergency_Override-FF0000?style=flat-square) | Emergency vehicles trigger instant signal override — bypasses timers |
+|![Manual](https://img.shields.io/badge/Manual_Control-3498DB?style=flat-square) | Dashboard-based manual signal override for traffic operators |
+|![Map](https://img.shields.io/badge/Interactive_Map-1ABC9C?style=flat-square) | Leaflet-powered map with intersection markers and real-time signal status |
+|![Video](https://img.shields.io/badge/Video_Upload-8E44AD?style=flat-square) | Upload traffic videos per lane, stream them from GridFS, and view analysis results |
+|![ESP32](https://img.shields.io/badge/ESP32_IoT-E7352C?style=flat-square) | Physical LED traffic signals controlled via WiFi, synced with the dashboard |
+|![Docker](https://img.shields.io/badge/Docker_Ready-2496ED?style=flat-square) | Full-stack containerized deployment with a single `docker compose up` |
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```
                ┌────────────────────────────────────────────────────────┐
-               │                    RAAHAT SYSTEM                      │
+               │                    RAAHAT SYSTEM                       │
                └────────────────────────────────────────────────────────┘
 
   ┌───────────┐     polls /traffic/current     ┌──────────────────────┐
@@ -95,10 +95,10 @@
   ┌────┴──────┐                              ┌────────▼──┐  ┌────▼──────────┐
   │  Operator │                              │  MongoDB  │  │  Model Server │
   │  (Human)  │                              │  GridFS   │  │  FastAPI      │
-  └───────────┘                              │  (Videos) │  │  YOLOv8 +    │
-                                             └───────────┘  │  Audio CNN   │
-  ┌───────────┐     polls /esp32/signal/:id                 │  :8000       │
-  │   ESP32   │◄──────────── (1s) ────────────►             └──────────────┘
+  └───────────┘                              │  (Videos) │  │  YOLOv8 +     │
+                                             └───────────┘  │  Audio CNN    │
+  ┌───────────┐     polls /esp32/signal/:id                 │  :8000        │
+  │   ESP32   │◄──────────── (1s) ────────────►             └───────────────┘
   │  + LEDs   │     heartbeat /esp32/heartbeat
   │  (WiFi)   │
   └───────────┘
@@ -120,7 +120,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### $\color{#61DAFB}{\textsf{Frontend}}$
 
@@ -170,11 +170,11 @@
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 H26-Raahat/
-├── 🖥️ frontend/                   # React + Vite frontend
+├── frontend/                      # React + Vite frontend
 │   ├── src/
 │   │   ├── components/            # Reusable UI components
 │   │   │   ├── AlertsPanel.jsx         # Activity log panel
@@ -194,10 +194,52 @@ H26-Raahat/
 │   ├── Dockerfile                 # Multi-stage build (Vite → nginx)
 │   └── package.json
 │
-├── ⚙️ backend/                     # Node.js + Express API
+├── backend/                       # Node.js + Express API
 │   ├── controllers/
 │   │   ├── esp32.controller.js         # ESP32 heartbeat & signal endpoints
 │   │   ├── intersection.controller.js  # Intersection CRUD
+│   │   ├── traffic.controller.js       # Traffic state & signal control
+│   │   └── video.controller.js         # Video upload, analysis, streaming
+│   ├── models/
+│   │   ├── esp32.model.js              # ESP32 device schema
+│   │   ├── intersection.model.js       # Intersection schema
+│   │   ├── traffic.model.js            # Traffic data schema
+│   │   └── video.model.js              # Video metadata schema
+│   ├── routes/
+│   │   ├── esp32.routes.js             # /esp32/* routes
+│   │   ├── intersection.routes.js      # /intersections/* routes
+│   │   ├── traffic.routes.js           # /traffic/* routes
+│   │   └── video.routes.js             # /video/* routes
+│   ├── services/
+│   │   ├── decision.service.js         # Lane scoring & signal decision logic
+│   │   ├── model.service.js            # Communication with Python model
+│   │   ├── signal.controller.js        # In-memory signal state management
+│   │   └── signal.engine.js            # Background signal cycle engine (1s)
+│   ├── utils/gridfs.js            # GridFS initialization
+│   ├── app.js                     # Express app setup & middleware
+│   ├── server.js                  # Entry point (DB connect, engine start)
+│   ├── Dockerfile                 # Node.js production image
+│   └── package.json
+│
+├── model/                         # Python AI model server
+│   ├── predict.py                 # FastAPI server — main predict endpoint
+│   ├── predict_video.py           # YOLOv8 vehicle detection & tracking
+│   ├── predict_audio.py           # Audio emergency classification (CNN)
+│   ├── best2.pt                   # YOLOv8 trained weights
+│   ├── raahat_audio_model.h5      # Keras audio classification model
+│   ├── requirements.txt           # Python dependencies
+│   └── Dockerfile                 # Python production image
+│
+├── esp32/                         # ESP32 firmware
+│   ├── esp32_signal_controller.ino  # Arduino sketch for LED control
+│   └── README.md                  # Hardware wiring & setup guide
+│
+├── docker-compose.yml             # Full-stack container orchestration
+├── .env.example                   # Environment variable template
+├── DOCKER.md                      # Detailed Docker deployment guide
+├── .gitignore                     # Git ignore rules
+└── README.md                      # Project documentation
+```
 │   │   ├── traffic.controller.js       # Traffic state & signal control
 │   │   └── video.controller.js         # Video upload, analysis, streaming
 │   ├── models/
@@ -243,7 +285,7 @@ H26-Raahat/
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Option 1: Docker (Recommended)
 
@@ -259,17 +301,17 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-> 🟢 Open **http://localhost:3000** — the full system is running.
+Open **http://localhost:3000** — the full system is running.
 
-> 📖 For advanced Docker configuration, see [DOCKER.md](DOCKER.md).
+For advanced Docker configuration, see [DOCKER.md](DOCKER.md).
 
 ### Option 2: Local Development
 
-See the [detailed setup instructions](#-local-development-setup) below.
+See the [detailed setup instructions](#local-development-setup) below.
 
 ---
 
-## 🔧 Local Development Setup
+## Local Development Setup
 
 ### Prerequisites
 
@@ -304,7 +346,7 @@ npm install
 npm run dev
 ```
 
-> 🟢 Backend starts on **http://localhost:3000**
+Backend starts on **http://localhost:3000**
 
 ### 4. Start the Frontend
 
@@ -314,7 +356,7 @@ npm install
 npm run dev
 ```
 
-> 🟢 Frontend starts on **http://localhost:5173**
+Frontend starts on **http://localhost:5173**
 
 ### 5. Start the Model Server
 
@@ -324,7 +366,7 @@ pip install -r requirements.txt
 uvicorn predict:app --reload --port 8000
 ```
 
-> 🟢 Model API starts on **http://localhost:8000**
+Model API starts on **http://localhost:8000**
 
 > [!NOTE]
 > The YOLOv8 model (`best2.pt`) and the audio model (`raahat_audio_model.h5`) must be present in the `model/` directory. These may not be included in the repository due to file size constraints — contact the team for model weights.
@@ -355,7 +397,7 @@ curl -X POST http://localhost:3000/video/upload \
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 The project includes a complete Docker Compose setup with **4 services**:
 
@@ -372,27 +414,27 @@ docker compose down              # Stop everything
 docker compose logs -f backend   # View backend logs
 ```
 
-> 📖 Full Docker documentation: [DOCKER.md](DOCKER.md)
+Full Docker documentation: [DOCKER.md](DOCKER.md)
 
 ---
 
-## 📡 API Reference
+## API Reference
 
-### ![Health](https://img.shields.io/badge/Health_Check-28a745?style=flat-square) Health
+### Health Check
 
 | Method | Endpoint | Description |
 |:------:|----------|-------------|
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/health` | Backend health check |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `Model :8000/health` | Model server health check |
 
-### ![Intersections](https://img.shields.io/badge/Intersections-F39C12?style=flat-square) Intersections
+### Intersections
 
 | Method | Endpoint | Description |
 |:------:|----------|-------------|
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/intersections` | Register a new intersection |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/intersections` | List all intersections |
 
-### ![Traffic](https://img.shields.io/badge/Traffic-E74C3C?style=flat-square) Traffic
+### Traffic
 
 | Method | Endpoint | Description |
 |:------:|----------|-------------|
@@ -400,7 +442,7 @@ docker compose logs -f backend   # View backend logs
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/manual` | Manual signal override |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/release` | Release manual override (return to AUTO) |
 
-### ![Video](https://img.shields.io/badge/Video-8E44AD?style=flat-square) Video
+### Video
 
 | Method | Endpoint | Description |
 |:------:|----------|-------------|
@@ -409,7 +451,7 @@ docker compose logs -f backend   # View backend logs
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/video/stream/:id` | Stream video from GridFS |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/video/intersection/:id` | List videos for an intersection |
 
-### ![ESP32](https://img.shields.io/badge/ESP32-E7352C?style=flat-square) ESP32
+### ESP32
 
 | Method | Endpoint | Description |
 |:------:|----------|-------------|
@@ -419,7 +461,7 @@ docker compose logs -f backend   # View backend logs
 
 ---
 
-## 🤖 AI Models
+## AI Models
 
 ### 1. $\color{orange}{\textsf{Vehicle Detection — YOLOv8}}$
 
@@ -441,7 +483,7 @@ docker compose logs -f backend   # View backend logs
 - **Process:**
   1. Extract audio from video using MoviePy
   2. Split into 3-second chunks
-  3. Convert each chunk to Mel spectrogram → resize to $128 \times 128$
+  3. Convert each chunk to Mel spectrogram → resize to 128 × 128
   4. Run CNN prediction → majority voting across chunks
 - **Emergency detection:** Any chunk classified as ambulance or fire truck triggers emergency
 
@@ -460,35 +502,35 @@ $$\text{emergency} = \begin{cases} \color{green}{\textbf{true}} & \text{if final
 
 ---
 
-## 📡 ESP32 Hardware Integration
+## ESP32 Hardware Integration
 
 The ESP32 microcontroller drives physical LED traffic signals, synced in real-time with the dashboard.
 
 | Specification | Detail |
 |:---:|--------|
-| 🔴🟡🟢 | **4 lanes × 3 LEDs** = 12 LEDs total |
-| 📡 | **Polls backend** every 1 second for signal state |
-| 💓 | **Sends heartbeat** for online/offline status tracking |
-| 🟡 | **Yellow transition** blinks 3–4 seconds on lane changes |
-| ⚠️ | **Manual override** shows blinking yellow for caution |
+| Signal Configuration | 4 lanes × 3 LEDs = 12 LEDs total (Red, Yellow, Green per lane) |
+| Polling Interval | Polls backend every 1 second for signal state |
+| Heartbeat | Sends heartbeat for online/offline status tracking |
+| Yellow Transition | Blinks 3–4 seconds on lane changes |
+| Manual Override | Shows blinking yellow for caution |
 
-> 📖 Full hardware setup, wiring diagram, and firmware: [esp32/README.md](esp32/README.md)
+Full hardware setup, wiring diagram, and firmware: [esp32/README.md](esp32/README.md)
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 > *Screenshots coming soon — launch the dashboard at `http://localhost:5173` (dev) or `http://localhost:3000` (Docker) to see it live.*
 
 The dashboard features:
-- 🟦 **Left Panel** — Intersection list with signal grid, video upload
-- 🟩 **Center Panel** — Interactive Leaflet map with intersection markers, video feed player
-- 🟧 **Right Panel** — Manual control center, ESP32 device status, activity log
-- 🟥 **Emergency Mode** — Red-tinted UI with pulsing alerts when emergency vehicles are detected
+- **Left Panel** — Intersection list with signal grid, video upload
+- **Center Panel** — Interactive Leaflet map with intersection markers, video feed player
+- **Right Panel** — Manual control center, ESP32 device status, activity log
+- **Emergency Mode** — Red-tinted UI with pulsing alerts when emergency vehicles are detected
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch (`git checkout -b feature/your-feature`)
@@ -505,24 +547,26 @@ The dashboard features:
 
 ---
 
-## 👥 Team
+## Team
 
 **Team Raahat — Hackathon H26**
 
 | Member | GitHub |
 |--------|--------|
 | Manish Kr Barman | [![GitHub](https://img.shields.io/badge/@ManishKrBarman-181717?style=flat-square&logo=github)](https://github.com/ManishKrBarman) |
+| Sahil Kasana | [![GitHub](https://img.shields.io/badge/@Sahil-181717?style=flat-square&logo=github)](https://github.com/sagurjar027) |
+| Raghav Solanki | [![GitHub](https://img.shields.io/badge/@raghavo2-181717?style=flat-square&logo=github)](https://github.com/raghavo2) |
+| Yash | [![GitHub](https://img.shields.io/badge/@yash-181717?style=flat-square&logo=github)](https://github.com/yash) |
 
-> *Add remaining team members here.*
 
 ---
 
-## 📄 License
+## License
 
 This project is developed for educational and hackathon purposes.
 
 ---
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Built_with_❤️_by-Team_Raahat-ff6b35?style=for-the-badge&labelColor=1a1a2e" alt="Team Raahat" />
+  <img src="https://img.shields.io/badge/Built_with_%E2%9D%A4_by-The_Creons-ff6b35?style=for-the-badge&labelColor=1a1a2e" alt="Team Raahat" />
 </p>
