@@ -6,7 +6,8 @@ const {
     updateSignal,
     manualOverride,
     getSignalState,
-    getAllSignalStates
+    getAllSignalStates,
+    dismissSuppressedEmergency
 } = require("../services/signal.controller");
 
 /**
@@ -133,4 +134,16 @@ exports.manualControl = (req, res) => {
 exports.getSignalStatus = (req, res) => {
     const intId = req.params.intersection_id || "default";
     res.json(getSignalState(intId));
+};
+
+/**
+ * POST /traffic/dismiss-emergency
+ * Dismiss a suppressed emergency alert (operator acknowledged)
+ * Body: { intersection_id }
+ */
+exports.dismissEmergency = (req, res) => {
+    const { intersection_id } = req.body;
+    const intId = intersection_id || "default";
+    const signal = dismissSuppressedEmergency(intId);
+    res.json(signal);
 };

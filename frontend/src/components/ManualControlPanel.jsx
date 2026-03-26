@@ -8,6 +8,7 @@ function ManualControlPanel({ selectedIntersection }) {
   const [signalState, setSignalState] = useState(null);
   const [countdown, setCountdown] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [dismissing, setDismissing] = useState(false);
 
   const intId = selectedIntersection || "default";
 
@@ -39,14 +40,53 @@ function ManualControlPanel({ selectedIntersection }) {
     setLoading(false);
   };
 
+  const handleDismissEmergency = async () => {
+    setDismissing(true);
+    try {
+      await axios.post(`${API_BASE_URL}/traffic/dismiss-emergency`, {
+        intersection_id: intId
+      });
+    } catch (err) {
+      console.error("Dismiss emergency failed:", err);
+    }
+    setDismissing(false);
+  };
+
   const mode = signalState?.mode || "—";
   const activeLane = signalState?.active_lane || "—";
   const reason = signalState?.reason || "—";
   const nextLane = signalState?.next_lane;
   const nextReason = signalState?.next_reason;
+  const suppressedEmergency = signalState?.suppressedEmergency;
 
   return (
     <div className="manual-control-panel">
+
+     {/* ⚠️ Suppressed Emergency Alert Banner */}
+      {suppressedEmergency && (
+        <div className="suppressed-emergency-banner">
+          <div className="suppressed-emergency-icon">⚠️</div>
+          <div className="suppressed-emergency-content">
+            <span className="suppressed-emergency-title">
+              Emergency Detected — Suppressed
+            </span>
+            <span className="suppressed-emergency-detail">
+              Lane {suppressedEmergency.lane} — {suppressedEmergency.reason}
+            </span>
+            <span className="suppressed-emergency-note">
+              Your manual override is taking priority. Dismiss if false positive.
+            </span>
+          </div>
+          <button
+            className="suppressed-emergency-dismiss"
+            onClick={handleDismissEmergency}
+            disabled={dismissing}
+          >
+            {dismissing ? "..." : "Dismiss"}
+          </button>
+        </div>
+      )}
+
       {/* Signal Status */}
       <div className="signal-status-card">
         <div className="signal-status-header">
@@ -149,8 +189,8 @@ function ManualControlPanel({ selectedIntersection }) {
           </p>
         )}
 
-        <p className="override-note">
-          Emergency vehicles will automatically override manual signals
+        <p className="override-note" style={{ color: "#00e676" }}>
+          Manual override takes priority over all automated signals including emergencies
         </p>
         <p className="override-note" style={{ color: "#f59e0b" }}>
           During manual override, all yellow signals will blink on the ESP32 to indicate caution — traffic can still proceed carefully.

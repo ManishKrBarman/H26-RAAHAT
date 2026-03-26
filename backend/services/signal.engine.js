@@ -14,13 +14,17 @@
  *   NORMAL CYCLE:
  *     Timer expires → re-evaluate all lanes → pick best → start new timer
  * 
- *   MANUAL OVERRIDE:
+ *   MANUAL OVERRIDE (HIGHEST PRIORITY):
+ *     Manual override is ALWAYS king — no automated signal can interrupt it.
+ *     If emergency is detected during manual override, it is SUPPRESSED
+ *     (stored in signal state for frontend warning) but never overrides.
  *     Manual timer expires → engine detects mode was MANUAL & isExpired
  *     → re-evaluates lanes → returns to AUTO mode with new decision
  * 
  *   EMERGENCY:
  *     Emergency detected in lane data → decision engine gives it score 1000+
  *     → forceOverride() immediately switches, even mid-timer
+ *     UNLESS manual override is active (then suppressed)
  * 
  *   CONTINUOUS VIDEO (future):
  *     AI model writes analysis results to DB continuously
@@ -86,11 +90,22 @@ async function tick() {
         // No analyzed videos yet → skip
         if (laneData.length === 0) continue;
 
-        // Check for EMERGENCY in latest data — this interrupts ANY timer
+        // Check for EMERGENCY in latest data
         const hasEmergency = laneData.some(l => l.emergency);
         if (hasEmergency) {
             const decision = decideSignal(laneData); // no penalty for emergency
             if (decision.reason === "emergency vehicle") {
+                // 🛑 If manual override is active — DO NOT override, suppress instead
+                if (state.mode === "MANUAL" && !state.isExpired) {
+                    // updateSignal will store the suppressed emergency info
+                    updateSignal(int.intersection_id, decision);
+                    console.log(
+                        `⚠️  Engine: Emergency detected on ${int.intersection_id} → Lane ${decision.active_lane} ` +
+                        `(SUPPRESSED — manual override active, ${state.remainingSeconds}s remaining)`
+                    );
+                    continue;
+                }
+                // Normal emergency override (no manual active)
                 if (state.reason !== "emergency vehicle" || state.isExpired) {
                     forceOverride(int.intersection_id, decision);
                     console.log(`🚨 Engine: Emergency override on ${int.intersection_id} → Lane ${decision.active_lane}`);
