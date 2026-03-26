@@ -45,7 +45,15 @@ const VideoSchema = new mongoose.Schema({
         emergency: {
             type: Boolean,
             default: false
-        }
+        },
+        // Audio analysis fields
+        audio_used: {
+            type: Boolean,
+            default: false
+        },
+        video_score: Number,
+        audio_score: Number,
+        final_score: Number
     },
 
     error: {

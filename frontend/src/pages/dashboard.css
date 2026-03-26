@@ -1097,6 +1097,29 @@
     50% { transform: scale(1.3); }
 }
 
+.feed-audio-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 3px;
+    padding: 2px 0;
+}
+
+.feed-audio-badge {
+    font-size: 10px;
+    cursor: default;
+}
+
+.feed-score {
+    font-size: 9px;
+    font-weight: 700;
+    font-family: monospace;
+    color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 6px;
+    border-radius: 4px;
+}
+
 
 /* ═══════════════════════════════════════════════════════
    VIDEO UPLOAD PANEL

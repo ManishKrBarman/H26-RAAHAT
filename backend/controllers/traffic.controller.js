@@ -37,6 +37,10 @@ exports.getCurrent = async (req, res) => {
                     avg_speed: latestVideo?.analysis?.avg_speed ?? 0,
                     density: latestVideo?.analysis?.density ?? "low",
                     emergency: latestVideo?.analysis?.emergency ?? false,
+                    audio_used: latestVideo?.analysis?.audio_used ?? false,
+                    video_score: latestVideo?.analysis?.video_score ?? 0,
+                    audio_score: latestVideo?.analysis?.audio_score ?? 0,
+                    final_score: latestVideo?.analysis?.final_score ?? 0,
                     hasVideo: !!latestVideo
                 });
             }

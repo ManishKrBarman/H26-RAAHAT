@@ -42,7 +42,7 @@ def raahat_predict_video(input_video_path, output_video_path, line):
                 confidence = confs[i]
 
                 # ✅ Confidence filter
-                if confidence >= 0.6:
+                if confidence >= 0.55:
                     track_class_history[track_id].append(class_id)
 
                 # 🔹 Speed
@@ -83,7 +83,7 @@ def raahat_predict_video(input_video_path, output_video_path, line):
         else:
             unique_ids.add(track_id)
 # total_vehicle_count = len(unique_ids) + len(emergency_ids)
-    total_vehicle_count = len(unique_ids)
+    total_vehicle_count = len(unique_ids)+len(emergency_ids)
     emergency_count = len(emergency_ids)
 
     # 🔹 Density

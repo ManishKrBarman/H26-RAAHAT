@@ -96,6 +96,18 @@ function VideoFeedPanel({ intersectionId }) {
                   {analysis.emergency && <span className="feed-emg">🚨</span>}
                 </div>
               )}
+
+              {/* Audio analysis row */}
+              {isAvailable && analysis && (
+                <div className="feed-audio-row">
+                  <span className="feed-audio-badge" title={analysis.audio_used ? "Audio analyzed" : "No audio"}>
+                    {analysis.audio_used ? "🔊" : "🔇"}
+                  </span>
+                  <span className="feed-score" title="Final confidence">
+                    {(analysis.final_score * 100).toFixed(0)}%
+                  </span>
+                </div>
+              )}
             </div>
           );
         })}
