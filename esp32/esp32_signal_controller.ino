@@ -7,9 +7,10 @@
 // --- CONFIG ---
 const char* WIFI_SSID     = "Excitel_mywifi_o2"; 
 const char* WIFI_PASSWORD = "@zxcvbnm";
-const char* SERVER_IP     = "192.168.1.4";
+const char* SERVER_IP     = "192.168.1.6";  // <-- Your machine's current WiFi IP
 const int   SERVER_PORT   = 3000;
 const char* INTERSECTION_ID = "INT-001";
+const char* DEVICE_ID      = "esp32-signal-01";
 
 const int STATUS_LED = 2; 
 
@@ -32,6 +33,7 @@ Lane lanes[4] = {
 
 WebServer server(80);
 unsigned long lastPoll = 0;
+unsigned long lastHeartbeat = 0;
 
 // --- DUAL BLINK LOGIC ---
 void updateSignalDisplay() {
@@ -85,24 +87,60 @@ void updateSignalDisplay() {
 }
 
 void pollBackend() {
-    if (WiFi.status() != WL_CONNECTED) return;
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("⚠️ WiFi disconnected, skipping poll");
+        return;
+    }
 
     HTTPClient http;
     String url = "http://" + String(SERVER_IP) + ":" + String(SERVER_PORT) + "/esp32/signal/" + INTERSECTION_ID;
     http.begin(url);
     http.setTimeout(1500);
     
-    if (http.GET() == 200) {
+    int httpCode = http.GET();
+    if (httpCode == 200) {
+        String payload = http.getString();
         StaticJsonDocument<512> doc;
-        deserializeJson(doc, http.getString());
+        deserializeJson(doc, payload);
         currentActiveLane = doc["active_lane"].as<String>();
         currentRemaining = doc["remaining"] | 0;
+        Serial.printf("✅ Signal: Lane=%s  Remaining=%d\n", currentActiveLane.c_str(), currentRemaining);
+    } else {
+        Serial.printf("❌ Poll failed: HTTP %d  URL: %s\n", httpCode, url.c_str());
+    }
+    http.end();
+}
+
+void sendHeartbeat() {
+    if (WiFi.status() != WL_CONNECTED) return;
+
+    HTTPClient http;
+    String url = "http://" + String(SERVER_IP) + ":" + String(SERVER_PORT) + "/esp32/heartbeat";
+    http.begin(url);
+    http.addHeader("Content-Type", "application/json");
+    http.setTimeout(2000);
+
+    StaticJsonDocument<200> doc;
+    doc["device_id"] = DEVICE_ID;
+    doc["intersection_id"] = INTERSECTION_ID;
+    doc["ip"] = WiFi.localIP().toString();
+
+    String body;
+    serializeJson(doc, body);
+
+    int httpCode = http.POST(body);
+    if (httpCode == 200) {
+        Serial.println("💓 Heartbeat sent OK");
+    } else {
+        Serial.printf("❌ Heartbeat failed: HTTP %d\n", httpCode);
     }
     http.end();
 }
 
 void setup() {
     Serial.begin(115200);
+    Serial.println("\n\n🚦 ESP32 Signal Controller Starting...");
+    
     pinMode(STATUS_LED, OUTPUT);
     for (int i = 0; i < 4; i++) {
         pinMode(lanes[i].red, OUTPUT); 
@@ -110,12 +148,16 @@ void setup() {
         pinMode(lanes[i].green, OUTPUT);
     }
 
+    Serial.printf("📶 Connecting to WiFi: %s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
         digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
+        Serial.print(".");
         delay(500);
     }
     digitalWrite(STATUS_LED, HIGH);
+    Serial.printf("\n✅ WiFi connected! IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("🎯 Backend target: %s:%d\n", SERVER_IP, SERVER_PORT);
 
     server.on(UriBraces("/set/{}/{}"), []() {
         String l = server.pathArg(0); String s = server.pathArg(1);
@@ -126,6 +168,10 @@ void setup() {
     });
 
     server.begin();
+    Serial.println("🌐 Local web server started on port 80");
+    
+    // Send first heartbeat immediately
+    sendHeartbeat();
 }
 
 void loop() {
@@ -133,8 +179,16 @@ void loop() {
     updateSignalDisplay();
     
     unsigned long now = millis();
+    
+    // Poll backend for signal state every 1 second
     if (now - lastPoll >= 1000) {
         lastPoll = now;
         pollBackend();
+    }
+    
+    // Send heartbeat every 10 seconds
+    if (now - lastHeartbeat >= 10000) {
+        lastHeartbeat = now;
+        sendHeartbeat();
     }
 }

@@ -87,10 +87,8 @@ exports.heartbeat = async (req, res) => {
                 ip: ip || null,
                 lastSeen: new Date()
             },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
+            { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
         );
-
-        console.log(`📡 ESP32 heartbeat: ${device_id} → ${intersection_id} (${ip || "no IP"})`);
 
         res.json({
             status: "ok",
