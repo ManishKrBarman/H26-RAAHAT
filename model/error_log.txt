@@ -1,0 +1,60 @@
+Traceback (most recent call last):
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\engine\base_layer.py", line 868, in from_config
+    return cls(**config)
+           ^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\dtensor\utils.py", line 96, in _wrap_function
+    init_method(layer_instance, *args, **kwargs)
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\layers\convolutional\conv2d.py", line 179, in __init__
+    super().__init__(
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\layers\convolutional\base_conv.py", line 118, in __init__
+    super().__init__(
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\tensorflow\python\trackable\base.py", line 205, in _method_wrapper
+    result = method(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\engine\base_layer.py", line 408, in __init__
+    self._set_dtype_policy(dtype)
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\engine\base_layer.py", line 2680, in _set_dtype_policy
+    self._dtype_policy = policy.deserialize(dtype)
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\mixed_precision\policy.py", line 515, in deserialize
+    return serialization.deserialize_keras_object(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\legacy\serialization.py", line 486, in deserialize_keras_object
+    (cls, cls_config) = class_and_config_for_serialized_keras_object(
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\legacy\serialization.py", line 368, in class_and_config_for_serialized_keras_object
+    raise ValueError(
+ValueError: Unknown dtype policy: 'DTypePolicy'. Please ensure you are using a `keras.utils.custom_object_scope` and that this object is included in the scope. See https://www.tensorflow.org/guide/keras/save_and_serialize#registering_the_custom_object for details.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "M:\hub\raahat\model\predict_audio.py", line 40, in <module>
+    _audio_model = load_model(
+                   ^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\saving_api.py", line 204, in load_model
+    return saving_lib.load_model(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\saving_lib.py", line 277, in load_model
+    raise e
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\saving_lib.py", line 242, in load_model
+    model = deserialize_keras_object(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\serialization_lib.py", line 502, in deserialize_keras_object
+    instance = cls.from_config(inner_config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\engine\sequential.py", line 476, in from_config
+    layer = layer_module.deserialize(
+            ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\layers\serialization.py", line 265, in deserialize
+    return legacy_serialization.deserialize_keras_object(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\saving\legacy\serialization.py", line 513, in deserialize_keras_object
+    deserialized_obj = cls.from_config(cls_config)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\manis\AppData\Local\Programs\Python\Python311\Lib\site-packages\keras\engine\base_layer.py", line 870, in from_config
+    raise TypeError(
+TypeError: Error when deserializing class 'Conv2D' using config={'name': 'conv2d', 'trainable': True, 'dtype': {'module': 'keras', 'class_name': 'DTypePolicy', 'config': {'name': 'float32'}, 'registered_name': None}, 'filters': 32, 'kernel_size': [3, 3], 'strides': [1, 1], 'padding': 'valid', 'data_format': 'channels_last', 'dilation_rate': [1, 1], 'groups': 1, 'activation': 'relu', 'use_bias': True, 'kernel_initializer': {'module': 'keras.initializers', 'class_name': 'GlorotUniform', 'config': {'seed': None}, 'registered_name': None}, 'bias_initializer': {'module': 'keras.initializers', 'class_name': 'Zeros', 'config': {}, 'registered_name': None}, 'kernel_regularizer': None, 'bias_regularizer': None, 'activity_regularizer': None, 'kernel_constraint': None, 'bias_constraint': None}.
+
+Exception encountered: Unknown dtype policy: 'DTypePolicy'. Please ensure you are using a `keras.utils.custom_object_scope` and that this object is included in the scope. See https://www.tensorflow.org/guide/keras/save_and_serialize#registering_the_custom_object for details.
