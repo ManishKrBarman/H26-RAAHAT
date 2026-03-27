@@ -62,7 +62,7 @@ function ManualControlPanel({ selectedIntersection }) {
   return (
     <div className="manual-control-panel">
 
-     {/* ⚠️ Suppressed Emergency Alert Banner */}
+      {/* ⚠️ Suppressed Emergency Alert Banner */}
       {suppressedEmergency && (
         <div className="suppressed-emergency-banner">
           <div className="suppressed-emergency-icon">⚠️</div>
@@ -189,12 +189,12 @@ function ManualControlPanel({ selectedIntersection }) {
           </p>
         )}
 
-        <p className="override-note" style={{ color: "#00e676" }}>
+        {/* <p className="override-note" style={{ color: "#00e676" }}>
           Manual override takes priority over all automated signals including emergencies
         </p>
         <p className="override-note" style={{ color: "#f59e0b" }}>
-          During manual override, all yellow signals will blink on the ESP32 to indicate caution — traffic can still proceed carefully.
-        </p>
+          During manual override, all yellow signals will blink to indicate caution — traffic can still proceed carefully.
+        </p> */}
       </div>
     </div>
   );

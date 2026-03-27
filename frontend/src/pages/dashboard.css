@@ -399,6 +399,31 @@
     border: 1px solid var(--map-popup-border) !important;
 }
 
+
+.raahat-fixed {
+    position: fixed;
+    top: 8px;
+    left: 14px;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.raahat-logo {
+    width: 84px;
+    height: 84px;
+    object-fit: contain;
+
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+
+    display: block;
+}
+
 .map-popup-content {
     padding: 2px;
 }
@@ -1785,4 +1810,9 @@
 .suppressed-emergency-dismiss:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+}
+
+/* Give left panel some top padding so content doesn't overlap fixed logo */
+.panel.left {
+    padding-top: 64px;
 }

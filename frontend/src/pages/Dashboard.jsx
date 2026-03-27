@@ -87,6 +87,11 @@ function Dashboard() {
   return (
     <div className={`dashboard ${isEmergency ? "emergency" : ""}`} data-theme={theme}>
 
+      {/* Fixed top-left logo */}
+      <div className="raahat-fixed">
+        <img className="raahat-logo" src="/raahat.png" alt="Raahat" />
+      </div>
+
       {/* Theme Toggle */}
       <div className="theme-toggle">
         <button
