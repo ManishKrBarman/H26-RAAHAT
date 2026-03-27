@@ -186,10 +186,11 @@ def _derive_line(lane_id: str, line_type: Optional[str]) -> str:
 # ══════════ RUN ══════════
 
 if __name__ == "__main__":
-    port = int(os.environ.get("MODEL_PORT", 8000))
+    import os
+    port = int(os.environ.get("PORT", 8000))
+
     uvicorn.run(
         "predict:app",
         host="0.0.0.0",
         port=port,
-        reload=True,
     )
