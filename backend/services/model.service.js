@@ -39,7 +39,7 @@ async function analyzeVideo(videoPath, intersectionId, laneId) {
  */
 async function callRealModel(videoPath, intersectionId, laneId) {
     try {
-        console.log(`🔄 Calling model API: ${MODEL_API_URL} (timeout: ${MODEL_TIMEOUT}ms)`);
+        console.log(`[MODEL] Calling model API: ${MODEL_API_URL} (timeout: ${MODEL_TIMEOUT}ms)`);
 
         const response = await axios.post(
             MODEL_API_URL,
@@ -58,10 +58,10 @@ async function callRealModel(videoPath, intersectionId, laneId) {
             data.emergency = data.emergency.toLowerCase() === "true";
         }
 
-        console.log(`✅ Model response for ${intersectionId}/${laneId}:`, data);
+        console.log(`[OK] Model response for ${intersectionId}/${laneId}:`, data);
         return data;
     } catch (err) {
-        console.error(`❌ Model API error for ${intersectionId}/${laneId}:`, err.message);
+        console.error(`[ERROR] Model API error for ${intersectionId}/${laneId}:`, err.message);
         throw new Error(`Model prediction failed: ${err.message}`);
     }
 }

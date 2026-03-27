@@ -46,7 +46,7 @@
 
 ## About the Project
 
-**Raahat** (meaning *"relief"* in Hindi/Urdu) is an intelligent traffic management system that uses AI-powered video and audio analysis to make real-time traffic signal decisions. The system processes live traffic footage through a $\color{orange}{\textsf{YOLOv8}}$ object detection model and a custom $\color{cyan}{\textsf{Audio CNN}}$ classification model to:
+**Raahat** (meaning _"relief"_ in Hindi/Urdu) is an intelligent traffic management system that uses AI-powered video and audio analysis to make real-time traffic signal decisions. The system processes live traffic footage through a $\color{orange}{\textsf{YOLOv8}}$ object detection model and a custom $\color{cyan}{\textsf{Audio CNN}}$ classification model to:
 
 - $\color{lightgreen}{\textsf{▸ Count vehicles}}$ and estimate traffic density per lane
 - $\color{red}{\textsf{▸ Detect emergency vehicles}}$ (ambulances, fire trucks) through both visual and audio cues
@@ -60,19 +60,19 @@
 
 ## Key Features
 
-| | Feature | Description |
-|:-:|---------|-------------|
-|![Video Analysis](https://img.shields.io/badge/Video_Analysis-FF6F00?style=flat-square) | YOLOv8-based vehicle detection, counting, speed estimation, and density classification |
-|![Audio Analysis](https://img.shields.io/badge/Audio_Analysis-9B59B6?style=flat-square) | Mel-spectrogram CNN model to detect emergency sirens (ambulance / fire truck) from video audio |
-|![Sensor Fusion](https://img.shields.io/badge/Sensor_Fusion-E74C3C?style=flat-square) | Weighted fusion of video (40%) and audio (60%) scores for robust emergency detection |
-|![Signal Engine](https://img.shields.io/badge/Signal_Engine-F39C12?style=flat-square) | Background engine (1s tick) that evaluates all lanes and switches signals automatically |
-|![Fairness](https://img.shields.io/badge/Lane_Rotation-2ECC71?style=flat-square) | Score-based penalty system ensures all lanes get green time, preventing starvation |
-|![Emergency](https://img.shields.io/badge/Emergency_Override-FF0000?style=flat-square) | Emergency vehicles trigger instant signal override — bypasses timers |
-|![Manual](https://img.shields.io/badge/Manual_Control-3498DB?style=flat-square) | Dashboard-based manual signal override for traffic operators |
-|![Map](https://img.shields.io/badge/Interactive_Map-1ABC9C?style=flat-square) | Leaflet-powered map with intersection markers and real-time signal status |
-|![Video](https://img.shields.io/badge/Video_Upload-8E44AD?style=flat-square) | Upload traffic videos per lane, stream them from GridFS, and view analysis results |
-|![ESP32](https://img.shields.io/badge/ESP32_IoT-E7352C?style=flat-square) | Physical LED traffic signals controlled via WiFi, synced with the dashboard |
-|![Docker](https://img.shields.io/badge/Docker_Ready-2496ED?style=flat-square) | Full-stack containerized deployment with a single `docker compose up` |
+|                                                                                         | Feature                                                                                        | Description |
+| :-------------------------------------------------------------------------------------: | ---------------------------------------------------------------------------------------------- | ----------- |
+| ![Video Analysis](https://img.shields.io/badge/Video_Analysis-FF6F00?style=flat-square) | YOLOv8-based vehicle detection, counting, speed estimation, and density classification         |
+| ![Audio Analysis](https://img.shields.io/badge/Audio_Analysis-9B59B6?style=flat-square) | Mel-spectrogram CNN model to detect emergency sirens (ambulance / fire truck) from video audio |
+|  ![Sensor Fusion](https://img.shields.io/badge/Sensor_Fusion-E74C3C?style=flat-square)  | Weighted fusion of video (40%) and audio (60%) scores for robust emergency detection           |
+|  ![Signal Engine](https://img.shields.io/badge/Signal_Engine-F39C12?style=flat-square)  | Background engine (1s tick) that evaluates all lanes and switches signals automatically        |
+|    ![Fairness](https://img.shields.io/badge/Lane_Rotation-2ECC71?style=flat-square)     | Score-based penalty system ensures all lanes get green time, preventing starvation             |
+| ![Emergency](https://img.shields.io/badge/Emergency_Override-FF0000?style=flat-square)  | Emergency vehicles trigger instant signal override — bypasses timers                           |
+|     ![Manual](https://img.shields.io/badge/Manual_Control-3498DB?style=flat-square)     | Dashboard-based manual signal override for traffic operators                                   |
+|      ![Map](https://img.shields.io/badge/Interactive_Map-1ABC9C?style=flat-square)      | Leaflet-powered map with intersection markers and real-time signal status                      |
+|      ![Video](https://img.shields.io/badge/Video_Upload-8E44AD?style=flat-square)       | Upload traffic videos per lane, stream them from GridFS, and view analysis results             |
+|        ![ESP32](https://img.shields.io/badge/ESP32_IoT-E7352C?style=flat-square)        | Physical LED traffic signals controlled via WiFi, synced with the dashboard                    |
+|      ![Docker](https://img.shields.io/badge/Docker_Ready-2496ED?style=flat-square)      | Full-stack containerized deployment with a single `docker compose up`                          |
 
 ---
 
@@ -124,49 +124,49 @@
 
 ### $\color{#61DAFB}{\textsf{Frontend}}$
 
-| Technology | Purpose |
-|:----------:|---------|
-| ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black) | UI framework |
-| ![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white) | Build tool & dev server |
-| ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat-square&logo=leaflet&logoColor=white) | Interactive map |
-| ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white) | HTTP client |
-| ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white) | Custom styling with glassmorphism & animations |
+|                                               Technology                                               | Purpose                                        |
+| :----------------------------------------------------------------------------------------------------: | ---------------------------------------------- |
+|  ![React](https://img.shields.io/badge/React_19-61DAFB?style=flat-square&logo=react&logoColor=black)   | UI framework                                   |
+|    ![Vite](https://img.shields.io/badge/Vite_8-646CFF?style=flat-square&logo=vite&logoColor=white)     | Build tool & dev server                        |
+| ![Leaflet](https://img.shields.io/badge/Leaflet-199900?style=flat-square&logo=leaflet&logoColor=white) | Interactive map                                |
+|    ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white)    | HTTP client                                    |
+|     ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white)      | Custom styling with glassmorphism & animations |
 
 ### $\color{#339933}{\textsf{Backend}}$
 
-| Technology | Purpose |
-|:----------:|---------|
-| ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white) | Runtime |
-| ![Express](https://img.shields.io/badge/Express_5-000000?style=flat-square&logo=express&logoColor=white) | Web framework |
-| ![Mongoose](https://img.shields.io/badge/Mongoose_9-880000?style=flat-square&logo=mongoose&logoColor=white) | MongoDB ODM |
-| ![GridFS](https://img.shields.io/badge/GridFS-47A248?style=flat-square&logo=mongodb&logoColor=white) | Video file storage |
-| ![Multer](https://img.shields.io/badge/Multer-FF6600?style=flat-square) | File upload handling |
+|                                                 Technology                                                  | Purpose              |
+| :---------------------------------------------------------------------------------------------------------: | -------------------- |
+|  ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=nodedotjs&logoColor=white)   | Runtime              |
+|  ![Express](https://img.shields.io/badge/Express_5-000000?style=flat-square&logo=express&logoColor=white)   | Web framework        |
+| ![Mongoose](https://img.shields.io/badge/Mongoose_9-880000?style=flat-square&logo=mongoose&logoColor=white) | MongoDB ODM          |
+|    ![GridFS](https://img.shields.io/badge/GridFS-47A248?style=flat-square&logo=mongodb&logoColor=white)     | Video file storage   |
+|                   ![Multer](https://img.shields.io/badge/Multer-FF6600?style=flat-square)                   | File upload handling |
 
 ### $\color{orange}{\textsf{AI / ML}}$
 
-| Technology | Purpose |
-|:----------:|---------|
-| ![YOLOv8](https://img.shields.io/badge/YOLOv8-FF6F00?style=flat-square&logo=pytorch&logoColor=white) | Vehicle detection & tracking |
-| ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat-square&logo=tensorflow&logoColor=white) | Audio emergency classification |
-| ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white) | Model serving API |
-| ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white) | Video frame processing |
-| ![Librosa](https://img.shields.io/badge/Librosa-3776AB?style=flat-square&logo=python&logoColor=white) | Audio feature extraction (Mel spectrograms) |
+|                                                   Technology                                                    | Purpose                                     |
+| :-------------------------------------------------------------------------------------------------------------: | ------------------------------------------- |
+|      ![YOLOv8](https://img.shields.io/badge/YOLOv8-FF6F00?style=flat-square&logo=pytorch&logoColor=white)       | Vehicle detection & tracking                |
+| ![TensorFlow](https://img.shields.io/badge/TensorFlow-FF6F00?style=flat-square&logo=tensorflow&logoColor=white) | Audio emergency classification              |
+|     ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)      | Model serving API                           |
+|       ![OpenCV](https://img.shields.io/badge/OpenCV-5C3EE8?style=flat-square&logo=opencv&logoColor=white)       | Video frame processing                      |
+|      ![Librosa](https://img.shields.io/badge/Librosa-3776AB?style=flat-square&logo=python&logoColor=white)      | Audio feature extraction (Mel spectrograms) |
 
 ### $\color{#2496ED}{\textsf{Infrastructure}}$
 
-| Technology | Purpose |
-|:----------:|---------|
-| ![MongoDB](https://img.shields.io/badge/MongoDB_7-47A248?style=flat-square&logo=mongodb&logoColor=white) | Database |
-| ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white) | Containerized deployment |
-| ![nginx](https://img.shields.io/badge/nginx-009639?style=flat-square&logo=nginx&logoColor=white) | Production static file serving |
+|                                                Technology                                                | Purpose                        |
+| :------------------------------------------------------------------------------------------------------: | ------------------------------ |
+| ![MongoDB](https://img.shields.io/badge/MongoDB_7-47A248?style=flat-square&logo=mongodb&logoColor=white) | Database                       |
+|   ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)    | Containerized deployment       |
+|     ![nginx](https://img.shields.io/badge/nginx-009639?style=flat-square&logo=nginx&logoColor=white)     | Production static file serving |
 
 ### $\color{#E7352C}{\textsf{Hardware}}$
 
-| Technology | Purpose |
-|:----------:|---------|
-| ![ESP32](https://img.shields.io/badge/ESP32_DevKit-E7352C?style=flat-square&logo=espressif&logoColor=white) | Microcontroller for physical signals |
-| ![Arduino](https://img.shields.io/badge/Arduino_IDE-00979D?style=flat-square&logo=arduino&logoColor=white) | Firmware development |
-| ![LEDs](https://img.shields.io/badge/12×_LEDs-FFD700?style=flat-square) | R/Y/G × 4 lanes — Physical traffic signals |
+|                                                 Technology                                                  | Purpose                                    |
+| :---------------------------------------------------------------------------------------------------------: | ------------------------------------------ |
+| ![ESP32](https://img.shields.io/badge/ESP32_DevKit-E7352C?style=flat-square&logo=espressif&logoColor=white) | Microcontroller for physical signals       |
+| ![Arduino](https://img.shields.io/badge/Arduino_IDE-00979D?style=flat-square&logo=arduino&logoColor=white)  | Firmware development                       |
+|                   ![LEDs](https://img.shields.io/badge/12×_LEDs-FFD700?style=flat-square)                   | R/Y/G × 4 lanes — Physical traffic signals |
 
 ---
 
@@ -240,48 +240,6 @@ H26-Raahat/
 ├── .gitignore                     # Git ignore rules
 └── README.md                      # Project documentation
 ```
-│   │   ├── traffic.controller.js       # Traffic state & signal control
-│   │   └── video.controller.js         # Video upload, analysis, streaming
-│   ├── models/
-│   │   ├── esp32.model.js              # ESP32 device schema
-│   │   ├── intersection.model.js       # Intersection schema
-│   │   ├── traffic.model.js            # Traffic data schema
-│   │   └── video.model.js              # Video metadata schema
-│   ├── routes/
-│   │   ├── esp32.routes.js             # /esp32/* routes
-│   │   ├── intersection.routes.js      # /intersections/* routes
-│   │   ├── traffic.routes.js           # /traffic/* routes
-│   │   └── video.routes.js             # /video/* routes
-│   ├── services/
-│   │   ├── decision.service.js         # Lane scoring & signal decision logic
-│   │   ├── model.service.js            # Communication with Python model
-│   │   ├── signal.controller.js        # In-memory signal state management
-│   │   └── signal.engine.js            # Background signal cycle engine (1s)
-│   ├── utils/gridfs.js            # GridFS initialization
-│   ├── app.js                     # Express app setup & middleware
-│   ├── server.js                  # Entry point (DB connect, engine start)
-│   ├── Dockerfile                 # Node.js production image
-│   └── package.json
-│
-├── 🤖 model/                       # Python AI model server
-│   ├── predict.py                 # FastAPI server — main predict endpoint
-│   ├── predict_video.py           # YOLOv8 vehicle detection & tracking
-│   ├── predict_audio.py           # Audio emergency classification (CNN)
-│   ├── best2.pt                   # YOLOv8 trained weights
-│   ├── raahat_audio_model.h5      # Keras audio classification model
-│   ├── requirements.txt           # Python dependencies
-│   └── Dockerfile                 # Python production image
-│
-├── 📡 esp32/                       # ESP32 firmware
-│   ├── esp32_signal_controller.ino  # Arduino sketch for LED control
-│   └── README.md                  # Hardware wiring & setup guide
-│
-├── docker-compose.yml             # Full-stack container orchestration
-├── .env.example                   # Environment variable template
-├── DOCKER.md                      # Detailed Docker deployment guide
-├── .gitignore                     # Git ignore rules
-└── README.md                      # ← You are here
-```
 
 ---
 
@@ -315,12 +273,12 @@ See the [detailed setup instructions](#local-development-setup) below.
 
 ### Prerequisites
 
-| Tool | Version | Badge |
-|------|---------|-------|
-| [Node.js](https://nodejs.org/) | 18+ | ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs&logoColor=white) |
-| [Python](https://www.python.org/) | 3.9+ | ![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white) |
-| [MongoDB](https://www.mongodb.com/try/download/community) | 7+ | ![MongoDB](https://img.shields.io/badge/MongoDB-7+-47A248?style=flat-square&logo=mongodb&logoColor=white) |
-| [Git](https://git-scm.com/) | Any | ![Git](https://img.shields.io/badge/Git-latest-F05032?style=flat-square&logo=git&logoColor=white) |
+| Tool                                                      | Version | Badge                                                                                                        |
+| --------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------ |
+| [Node.js](https://nodejs.org/)                            | 18+     | ![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=flat-square&logo=nodedotjs&logoColor=white) |
+| [Python](https://www.python.org/)                         | 3.9+    | ![Python](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)     |
+| [MongoDB](https://www.mongodb.com/try/download/community) | 7+      | ![MongoDB](https://img.shields.io/badge/MongoDB-7+-47A248?style=flat-square&logo=mongodb&logoColor=white)    |
+| [Git](https://git-scm.com/)                               | Any     | ![Git](https://img.shields.io/badge/Git-latest-F05032?style=flat-square&logo=git&logoColor=white)            |
 
 ### 1. Clone the Repository
 
@@ -401,12 +359,12 @@ curl -X POST http://localhost:3000/video/upload \
 
 The project includes a complete Docker Compose setup with **4 services**:
 
-| Service | Image | Port | Status |
-|---------|-------|:----:|--------|
-| `frontend` | nginx:alpine | `3000` | ![Frontend](https://img.shields.io/badge/React_Build-nginx-009639?style=flat-square) |
-| `backend` | node:20-alpine | `3001` | ![Backend](https://img.shields.io/badge/Express_API-Node.js-339933?style=flat-square) |
-| `model` | python:3.9 | `8000` | ![Model](https://img.shields.io/badge/YOLOv8+CNN-FastAPI-009688?style=flat-square) |
-| `mongodb` | mongo:7 | `27017` | ![MongoDB](https://img.shields.io/badge/Database-GridFS-47A248?style=flat-square) |
+| Service    | Image          |  Port   | Status                                                                                |
+| ---------- | -------------- | :-----: | ------------------------------------------------------------------------------------- |
+| `frontend` | nginx:alpine   | `3000`  | ![Frontend](https://img.shields.io/badge/React_Build-nginx-009639?style=flat-square)  |
+| `backend`  | node:20-alpine | `3001`  | ![Backend](https://img.shields.io/badge/Express_API-Node.js-339933?style=flat-square) |
+| `model`    | python:3.9     | `8000`  | ![Model](https://img.shields.io/badge/YOLOv8+CNN-FastAPI-009688?style=flat-square)    |
+| `mongodb`  | mongo:7        | `27017` | ![MongoDB](https://img.shields.io/badge/Database-GridFS-47A248?style=flat-square)     |
 
 ```bash
 docker compose up -d --build     # Start everything
@@ -422,42 +380,42 @@ Full Docker documentation: [DOCKER.md](DOCKER.md)
 
 ### Health Check
 
-| Method | Endpoint | Description |
-|:------:|----------|-------------|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/health` | Backend health check |
+|                              Method                               | Endpoint             | Description               |
+| :---------------------------------------------------------------: | -------------------- | ------------------------- |
+| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/health`            | Backend health check      |
 | ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `Model :8000/health` | Model server health check |
 
 ### Intersections
 
-| Method | Endpoint | Description |
-|:------:|----------|-------------|
+|                               Method                                | Endpoint         | Description                 |
+| :-----------------------------------------------------------------: | ---------------- | --------------------------- |
 | ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/intersections` | Register a new intersection |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/intersections` | List all intersections |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/intersections` | List all intersections      |
 
 ### Traffic
 
-| Method | Endpoint | Description |
-|:------:|----------|-------------|
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/traffic/current` | Get current signal state for all intersections |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/manual` | Manual signal override |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/release` | Release manual override (return to AUTO) |
+|                               Method                                | Endpoint           | Description                                    |
+| :-----------------------------------------------------------------: | ------------------ | ---------------------------------------------- |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/traffic/current` | Get current signal state for all intersections |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/manual`  | Manual signal override                         |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/traffic/release` | Release manual override (return to AUTO)       |
 
 ### Video
 
-| Method | Endpoint | Description |
-|:------:|----------|-------------|
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/video/upload` | Upload traffic video (multipart form) |
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/video/analyze/:id` | Trigger AI analysis on uploaded video |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/video/stream/:id` | Stream video from GridFS |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/video/intersection/:id` | List videos for an intersection |
+|                               Method                                | Endpoint                  | Description                           |
+| :-----------------------------------------------------------------: | ------------------------- | ------------------------------------- |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/video/upload`           | Upload traffic video (multipart form) |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/video/analyze/:id`      | Trigger AI analysis on uploaded video |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/video/stream/:id`       | Stream video from GridFS              |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/video/intersection/:id` | List videos for an intersection       |
 
 ### ESP32
 
-| Method | Endpoint | Description |
-|:------:|----------|-------------|
-| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/esp32/heartbeat` | ESP32 sends heartbeat with status |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/esp32/signal/:intersectionId` | ESP32 polls for current signal state |
-| ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square) | `/esp32/devices` | List all registered ESP32 devices |
+|                               Method                                | Endpoint                        | Description                          |
+| :-----------------------------------------------------------------: | ------------------------------- | ------------------------------------ |
+| ![POST](https://img.shields.io/badge/POST-49CC90?style=flat-square) | `/esp32/heartbeat`              | ESP32 sends heartbeat with status    |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/esp32/signal/:intersectionId` | ESP32 polls for current signal state |
+|  ![GET](https://img.shields.io/badge/GET-61AFFE?style=flat-square)  | `/esp32/devices`                | List all registered ESP32 devices    |
 
 ---
 
@@ -506,13 +464,13 @@ $$\text{emergency} = \begin{cases} \color{green}{\textbf{true}} & \text{if final
 
 The ESP32 microcontroller drives physical LED traffic signals, synced in real-time with the dashboard.
 
-| Specification | Detail |
-|:---:|--------|
+|    Specification     | Detail                                                         |
+| :------------------: | -------------------------------------------------------------- |
 | Signal Configuration | 4 lanes × 3 LEDs = 12 LEDs total (Red, Yellow, Green per lane) |
-| Polling Interval | Polls backend every 1 second for signal state |
-| Heartbeat | Sends heartbeat for online/offline status tracking |
-| Yellow Transition | Blinks 3–4 seconds on lane changes |
-| Manual Override | Shows blinking yellow for caution |
+|   Polling Interval   | Polls backend every 1 second for signal state                  |
+|      Heartbeat       | Sends heartbeat for online/offline status tracking             |
+|  Yellow Transition   | Blinks 3–4 seconds on lane changes                             |
+|   Manual Override    | Shows blinking yellow for caution                              |
 
 Full hardware setup, wiring diagram, and firmware: [esp32/README.md](esp32/README.md)
 
@@ -520,9 +478,10 @@ Full hardware setup, wiring diagram, and firmware: [esp32/README.md](esp32/READM
 
 ## Screenshots
 
-> *Screenshots coming soon — launch the dashboard at `http://localhost:5173` (dev) or `http://localhost:3000` (Docker) to see it live.*
+> _Screenshots coming soon — launch the dashboard at `http://localhost:5173` (dev) or `http://localhost:3000` (Docker) to see it live._
 
 The dashboard features:
+
 - **Left Panel** — Intersection list with signal grid, video upload
 - **Center Panel** — Interactive Leaflet map with intersection markers, video feed player
 - **Right Panel** — Manual control center, ESP32 device status, activity log
@@ -551,13 +510,12 @@ The dashboard features:
 
 **Team Raahat — Hackathon H26**
 
-| Member | GitHub |
-|--------|--------|
+| Member           | GitHub                                                                                                                            |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | Manish Kr Barman | [![GitHub](https://img.shields.io/badge/@ManishKrBarman-181717?style=flat-square&logo=github)](https://github.com/ManishKrBarman) |
-| Sahil Kasana | [![GitHub](https://img.shields.io/badge/@Sahil-181717?style=flat-square&logo=github)](https://github.com/sagurjar027) |
-| Raghav Solanki | [![GitHub](https://img.shields.io/badge/@raghavo2-181717?style=flat-square&logo=github)](https://github.com/raghavo2) |
-| Yash | [![GitHub](https://img.shields.io/badge/@yash-181717?style=flat-square&logo=github)](https://github.com/yash) |
-
+| Sahil Kasana     | [![GitHub](https://img.shields.io/badge/@Sahil-181717?style=flat-square&logo=github)](https://github.com/sagurjar027)             |
+| Raghav Solanki   | [![GitHub](https://img.shields.io/badge/@raghavo2-181717?style=flat-square&logo=github)](https://github.com/raghavo2)             |
+| Yash             | [![GitHub](https://img.shields.io/badge/@yash-181717?style=flat-square&logo=github)](https://github.com/yash)                     |
 
 ---
 

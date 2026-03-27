@@ -5,6 +5,14 @@ function IntersectionPanel({ intersection, isSelected }) {
   const mode = signal?.mode || "AUTO";
   const isManual = mode === "MANUAL";
 
+  // Active pair (both lanes open together)
+  const activePair = decision?.active_pair || signal?.active_pair || 
+    (decision?.active_lane ? [decision.active_lane] : []);
+
+  const pairDisplay = activePair.length > 1
+    ? activePair.join(" ↔ ")
+    : activePair[0] || "—";
+
   return (
     <div className={`int-panel-card ${isSelected ? "selected" : ""}`}>
       <div className="int-panel-header">
@@ -16,8 +24,8 @@ function IntersectionPanel({ intersection, isSelected }) {
 
       <div className="int-panel-stats">
         <div className="int-panel-stat">
-          <span className="int-stat-label">Active Lane</span>
-          <span className="int-stat-value green-glow">{decision?.active_lane || "—"}</span>
+          <span className="int-stat-label">Active Pair</span>
+          <span className="int-stat-value green-glow">{pairDisplay}</span>
         </div>
         <div className="int-panel-stat">
           <span className="int-stat-label">Reason</span>
@@ -43,13 +51,13 @@ function IntersectionPanel({ intersection, isSelected }) {
           color: "#f59e0b",
           textAlign: "center"
         }}>
-          Yellow signals blinking — caution mode
+          Yellow signals blinking — Pair {pairDisplay} active (caution)
         </div>
       )}
 
       <div className="int-panel-lanes">
         {lanes.map((lane, i) => {
-          const isActive = lane.lane === decision?.active_lane;
+          const isActive = activePair.includes(lane.lane);
           const isYellow = isManual && !isActive;
 
           return (

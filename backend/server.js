@@ -1,3 +1,7 @@
+// Load environment variables from root .env (no-op in Docker where env is injected)
+const path = require("path");
+require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
+
 const app = require("./app");
 const mongoose = require("mongoose");
 const { initGridFS } = require("./utils/gridfs");
@@ -8,7 +12,7 @@ const MONGODB_URI = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/raahat
 
 mongoose.connect(MONGODB_URI)
     .then(() => {
-        console.log("✅ DB connected");
+        console.log("[OK] DB connected");
 
         // Initialize GridFS after DB connection is ready
         initGridFS();
@@ -17,10 +21,10 @@ mongoose.connect(MONGODB_URI)
         startEngine();
 
         app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
+            console.log(`Server running on port ${PORT}`);
         });
     })
     .catch(err => {
-        console.error("❌ DB connection failed:", err.message);
+        console.error("[ERROR] DB connection failed:", err.message);
         process.exit(1);
     });

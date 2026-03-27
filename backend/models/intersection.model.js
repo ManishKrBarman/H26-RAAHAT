@@ -19,6 +19,10 @@ const IntersectionSchema = new mongoose.Schema({
         required: true,
         default: ["A", "B", "C", "D"]
     },
+    lane_pairs: {
+        type: [[String]],
+        default: [["A", "C"], ["B", "D"]]
+    },
     createdAt: {
         type: Date,
         default: Date.now

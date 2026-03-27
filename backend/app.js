@@ -8,7 +8,10 @@ const esp32Routes = require("./routes/esp32.routes");
 
 const app = express();
 
-app.use(cors());
+// CORS: configurable via CORS_ORIGIN env var (comma-separated origins)
+// If not set, allows all origins (suitable for development)
+const corsOrigin = process.env.CORS_ORIGIN;
+app.use(cors(corsOrigin ? { origin: corsOrigin.split(",").map(s => s.trim()) } : {}));
 app.use(express.json());
 
 // Health check endpoint (used by Docker)

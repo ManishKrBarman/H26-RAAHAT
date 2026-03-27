@@ -14,81 +14,152 @@ function laneScore(lane) {
 }
 
 /**
- * Decide signal with lane rotation fairness.
+ * Find which pair a lane belongs to.
+ * @param {string} laneId
+ * @param {Array<Array<string>>} lanePairs - e.g. [["A","C"],["B","D"]]
+ * @returns {Array<string>|null} - the pair array, or null
+ */
+function findPairForLane(laneId, lanePairs) {
+    for (const pair of lanePairs) {
+        if (pair.includes(laneId)) return pair;
+    }
+    return null;
+}
+
+/**
+ * Score a pair of lanes by summing their individual scores.
+ * @param {Array<string>} pair - e.g. ["A","C"]
+ * @param {Array} lanes - lane data array with { lane, vehicle_count, ... }
+ * @returns {{ score: number, hasEmergency: boolean, primaryLane: string }}
+ */
+function scorePair(pair, lanes) {
+    let totalScore = 0;
+    let hasEmergency = false;
+    let primaryLane = pair[0]; // default to first lane in pair
+    let highestIndividual = -1;
+
+    for (const laneId of pair) {
+        const laneData = lanes.find(l => l.lane === laneId);
+        if (laneData) {
+            const s = laneScore(laneData);
+            totalScore += s;
+            if (laneData.emergency) hasEmergency = true;
+            if (s > highestIndividual) {
+                highestIndividual = s;
+                primaryLane = laneId; // primary = highest-scoring lane in pair
+            }
+        }
+    }
+
+    return { score: totalScore, hasEmergency, primaryLane };
+}
+
+/**
+ * Decide signal based on LANE PAIRS (opposite lanes open together).
  * 
  * @param {Array} lanes - lane data array
- * @param {string|null} currentActiveLane - the lane that JUST expired (optional)
- *   If provided, this lane gets a penalty to encourage rotation.
- *   Emergency lanes IGNORE the penalty — they always win.
+ * @param {Array<Array<string>>} lanePairs - pair definitions, e.g. [["A","C"],["B","D"]]
+ * @param {Array<string>|null} currentActivePair - the pair that JUST expired (optional)
+ *   If provided, this pair gets a fairness penalty to encourage rotation.
+ *   Emergency pairs IGNORE the penalty — they always win.
  */
-function decideSignal(lanes, currentActiveLane) {
-    // Score all lanes
-    const scored = lanes.map(l => {
-        let score = laneScore(l);
+function decideSignal(lanes, lanePairs, currentActivePair) {
+    // Fallback: if no pairs provided, use legacy single-lane logic
+    if (!lanePairs || lanePairs.length === 0) {
+        lanePairs = [["A", "C"], ["B", "D"]];
+    }
 
-        // Fairness penalty: if this lane was just active and it's not an emergency,
-        // reduce its score so other lanes get a turn
-        if (currentActiveLane && l.lane === currentActiveLane && !l.emergency) {
-            score = Math.max(0, score - 150);
+    // Score all pairs
+    const scored = lanePairs.map(pair => {
+        const result = scorePair(pair, lanes);
+
+        // Fairness penalty: if this pair was just active and no emergency,
+        // reduce its score so other pairs get a turn
+        if (currentActivePair && !result.hasEmergency) {
+            const pairKey = [...pair].sort().join(",");
+            const activePairKey = [...currentActivePair].sort().join(",");
+            if (pairKey === activePairKey) {
+                result.score = Math.max(0, result.score - 300); // pair penalty (doubled from single-lane 150)
+            }
         }
 
-        return { ...l, score };
+        return { pair, ...result };
     });
 
     scored.sort((a, b) => b.score - a.score);
 
     const best = scored[0];
 
+    // Determine duration and reason based on the best pair's characteristics
     let duration = 15;
     let reason = "low traffic";
 
-    if (best.emergency) {
+    if (best.hasEmergency) {
         duration = 60;
         reason = "emergency vehicle";
-    } else if (best.density === "high") {
-        duration = 40;
-        reason = "high traffic";
-    } else if (best.density === "medium") {
-        duration = 25;
-        reason = "medium traffic";
+    } else {
+        // Use the highest density in the pair
+        const densities = best.pair.map(laneId => {
+            const l = lanes.find(x => x.lane === laneId);
+            return l ? l.density : "low";
+        });
+        if (densities.includes("high")) {
+            duration = 40;
+            reason = "high traffic";
+        } else if (densities.includes("medium")) {
+            duration = 25;
+            reason = "medium traffic";
+        }
     }
 
-    // Simulate NEXT cycle: when this winner expires, the engine will apply
-    // the fairness penalty to IT. So we re-score with that penalty to get
-    // an accurate next_lane prediction.
+    // Predict NEXT pair (simulate fairness penalty on current winner)
+    let nextPair = null;
     let nextLane = null;
     let nextDuration = null;
     let nextReason = null;
 
-    if (lanes.length > 1) {
-        const nextScored = lanes.map(l => {
-            let s = laneScore(l);
-            // Apply fairness penalty to the CURRENT winner (simulating what engine does)
-            if (l.lane === best.lane && !l.emergency) {
-                s = Math.max(0, s - 150);
+    if (lanePairs.length > 1) {
+        const nextScored = lanePairs.map(pair => {
+            const result = scorePair(pair, lanes);
+            // Apply fairness penalty to the CURRENT winner
+            if (!result.hasEmergency) {
+                const pairKey = [...pair].sort().join(",");
+                const bestPairKey = [...best.pair].sort().join(",");
+                if (pairKey === bestPairKey) {
+                    result.score = Math.max(0, result.score - 300);
+                }
             }
-            return { ...l, score: s };
+            return { pair, ...result };
         });
         nextScored.sort((a, b) => b.score - a.score);
         const nextBest = nextScored[0];
 
-        nextLane = nextBest.lane;
+        nextPair = nextBest.pair;
+        nextLane = nextBest.primaryLane;
         nextDuration = 15;
         nextReason = "low traffic";
-        if (nextBest.emergency) { nextDuration = 60; nextReason = "emergency vehicle"; }
-        else if (nextBest.density === "high") { nextDuration = 40; nextReason = "high traffic"; }
-        else if (nextBest.density === "medium") { nextDuration = 25; nextReason = "medium traffic"; }
+        if (nextBest.hasEmergency) { nextDuration = 60; nextReason = "emergency vehicle"; }
+        else {
+            const nd = nextBest.pair.map(laneId => {
+                const l = lanes.find(x => x.lane === laneId);
+                return l ? l.density : "low";
+            });
+            if (nd.includes("high")) { nextDuration = 40; nextReason = "high traffic"; }
+            else if (nd.includes("medium")) { nextDuration = 25; nextReason = "medium traffic"; }
+        }
     }
 
     return {
-        active_lane: best.lane,
+        active_pair: best.pair,           // NEW: ["A","C"]
+        active_lane: best.primaryLane,    // backward compat: "A" (highest-scoring in pair)
         duration,
         reason,
         score: best.score,
+        next_pair: nextPair,
         next_lane: nextLane,
         next_duration: nextDuration,
         next_reason: nextReason
     };
 }
 
-module.exports = { decideSignal, laneScore };
+module.exports = { decideSignal, laneScore, findPairForLane, scorePair };

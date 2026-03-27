@@ -15,7 +15,9 @@ const char* DEVICE_ID      = "esp32-signal-01";
 const int STATUS_LED = 2; 
 
 // --- GLOBAL STATE ---
-String currentActiveLane = "A"; 
+String currentActiveLane = "A";
+String currentActivePair[2] = {"A", "C"};  // Both lanes in active pair
+int activePairCount = 2;
 int currentRemaining = 30;
 
 struct Lane {
@@ -35,22 +37,29 @@ WebServer server(80);
 unsigned long lastPoll = 0;
 unsigned long lastHeartbeat = 0;
 
-// --- DUAL BLINK LOGIC ---
-void updateSignalDisplay() {
-    char currentID = currentActiveLane[0];
-    char nextID;
-    
-    // Determine the next lane in the A->B->C->D rotation
-    if (currentID == 'A') nextID = 'B';
-    else if (currentID == 'B') nextID = 'C';
-    else if (currentID == 'C') nextID = 'D';
-    else nextID = 'A';
+// --- Helper: check if a lane is in the active pair ---
+bool isInActivePair(char laneId) {
+    for (int i = 0; i < activePairCount; i++) {
+        if (currentActivePair[i][0] == laneId) return true;
+    }
+    return false;
+}
 
+// --- Helper: check if a lane is in the OTHER (non-active) pair ---
+bool isInNextPair(char laneId) {
+    return !isInActivePair(laneId);
+}
+
+// --- PAIR-BASED SIGNAL DISPLAY ---
+void updateSignalDisplay() {
     bool blinkOn = (millis() / 300) % 2 == 0;
 
     for (int i = 0; i < 4; i++) {
-        // 1. THE CURRENT ACTIVE LANE
-        if (lanes[i].id == currentID) {
+        bool inActivePair = isInActivePair(lanes[i].id);
+        bool inNextPair = isInNextPair(lanes[i].id);
+
+        // 1. LANES IN THE ACTIVE PAIR → GREEN (or yellow buffer when expiring)
+        if (inActivePair) {
             if (currentRemaining > 4) {
                 // NORMAL GREEN
                 digitalWrite(lanes[i].green,  HIGH);
@@ -62,9 +71,9 @@ void updateSignalDisplay() {
                 digitalWrite(lanes[i].red,    LOW);
                 digitalWrite(lanes[i].yellow, blinkOn ? HIGH : LOW);
             }
-        } 
-        // 2. THE NEXT LANE IN QUEUE
-        else if (lanes[i].id == nextID) {
+        }
+        // 2. LANES IN THE NEXT PAIR → RED (or yellow buffer when about to go)
+        else if (inNextPair) {
             if (currentRemaining <= 4) {
                 // BUFFER: BLINK YELLOW (PREPARE TO GO)
                 digitalWrite(lanes[i].green,  LOW);
@@ -77,18 +86,12 @@ void updateSignalDisplay() {
                 digitalWrite(lanes[i].red,    HIGH);
             }
         }
-        // 3. ALL OTHER LANES
-        else {
-            digitalWrite(lanes[i].green,  LOW);
-            digitalWrite(lanes[i].yellow, LOW);
-            digitalWrite(lanes[i].red,    HIGH);
-        }
     }
 }
 
 void pollBackend() {
     if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("⚠️ WiFi disconnected, skipping poll");
+        Serial.println("[WARN] WiFi disconnected, skipping poll");
         return;
     }
 
@@ -104,9 +107,26 @@ void pollBackend() {
         deserializeJson(doc, payload);
         currentActiveLane = doc["active_lane"].as<String>();
         currentRemaining = doc["remaining"] | 0;
-        Serial.printf("✅ Signal: Lane=%s  Remaining=%d\n", currentActiveLane.c_str(), currentRemaining);
+        
+        // Parse active_pair from response
+        JsonArray pair = doc["active_pair"].as<JsonArray>();
+        if (pair && pair.size() > 0) {
+            activePairCount = min((int)pair.size(), 2);
+            for (int i = 0; i < activePairCount; i++) {
+                currentActivePair[i] = pair[i].as<String>();
+            }
+        } else {
+            // Fallback: just use active_lane as single-lane pair
+            currentActivePair[0] = currentActiveLane;
+            activePairCount = 1;
+        }
+        
+        Serial.printf("[OK] Signal: Pair=[%s<->%s]  Remaining=%d\n", 
+            currentActivePair[0].c_str(), 
+            activePairCount > 1 ? currentActivePair[1].c_str() : "--", 
+            currentRemaining);
     } else {
-        Serial.printf("❌ Poll failed: HTTP %d  URL: %s\n", httpCode, url.c_str());
+        Serial.printf("[ERROR] Poll failed: HTTP %d  URL: %s\n", httpCode, url.c_str());
     }
     http.end();
 }
@@ -130,16 +150,16 @@ void sendHeartbeat() {
 
     int httpCode = http.POST(body);
     if (httpCode == 200) {
-        Serial.println("💓 Heartbeat sent OK");
+        Serial.println("[OK] Heartbeat sent OK");
     } else {
-        Serial.printf("❌ Heartbeat failed: HTTP %d\n", httpCode);
+        Serial.printf("[ERROR] Heartbeat failed: HTTP %d\n", httpCode);
     }
     http.end();
 }
 
 void setup() {
     Serial.begin(115200);
-    Serial.println("\n\n🚦 ESP32 Signal Controller Starting...");
+    Serial.println("\n\n[INIT] ESP32 Signal Controller Starting...");
     
     pinMode(STATUS_LED, OUTPUT);
     for (int i = 0; i < 4; i++) {
@@ -148,7 +168,7 @@ void setup() {
         pinMode(lanes[i].green, OUTPUT);
     }
 
-    Serial.printf("📶 Connecting to WiFi: %s\n", WIFI_SSID);
+    Serial.printf("[WIFI] Connecting to WiFi: %s\n", WIFI_SSID);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     while (WiFi.status() != WL_CONNECTED) {
         digitalWrite(STATUS_LED, !digitalRead(STATUS_LED));
@@ -156,8 +176,8 @@ void setup() {
         delay(500);
     }
     digitalWrite(STATUS_LED, HIGH);
-    Serial.printf("\n✅ WiFi connected! IP: %s\n", WiFi.localIP().toString().c_str());
-    Serial.printf("🎯 Backend target: %s:%d\n", SERVER_IP, SERVER_PORT);
+    Serial.printf("\n[OK] WiFi connected! IP: %s\n", WiFi.localIP().toString().c_str());
+    Serial.printf("[TARGET] Backend target: %s:%d\n", SERVER_IP, SERVER_PORT);
 
     server.on(UriBraces("/set/{}/{}"), []() {
         String l = server.pathArg(0); String s = server.pathArg(1);
@@ -168,7 +188,7 @@ void setup() {
     });
 
     server.begin();
-    Serial.println("🌐 Local web server started on port 80");
+    Serial.println("[OK] Local web server started on port 80");
     
     // Send first heartbeat immediately
     sendHeartbeat();

@@ -1,25 +1,51 @@
-function SignalGrid({ lanes, activeLane, mode }) {
+function SignalGrid({ lanes, activeLane, activePair, mode }) {
   if (!lanes) return <p>Loading lanes...</p>;
 
   const isManual = mode === "MANUAL";
 
+  // Resolve active pair — both lanes in the pair are GREEN
+  const greenLanes = activePair || (activeLane ? [activeLane] : []);
+
   // Determine signal color for each lane
   const getSignalColor = (laneId) => {
     if (isManual) {
-      return laneId === activeLane ? "green" : "#f59e0b"; // amber for non-active
+      return greenLanes.includes(laneId) ? "green" : "#f59e0b"; // amber for non-active
     }
-    return laneId === activeLane ? "green" : "red";
+    return greenLanes.includes(laneId) ? "green" : "red";
   };
 
   const getSignalLabel = (laneId) => {
     if (isManual) {
-      return laneId === activeLane ? "GREEN" : "YELLOW";
+      return greenLanes.includes(laneId) ? "GREEN" : "YELLOW";
     }
-    return laneId === activeLane ? "GREEN" : "RED";
+    return greenLanes.includes(laneId) ? "GREEN" : "RED";
   };
+
+  // Format pair display string
+  const pairDisplay = greenLanes.length > 1
+    ? greenLanes.join(" ↔ ")
+    : greenLanes[0] || "—";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+
+      {/* Active pair banner */}
+      {greenLanes.length > 1 && !isManual && (
+        <div style={{
+          background: "rgba(0, 230, 118, 0.08)",
+          border: "1px solid rgba(0, 230, 118, 0.3)",
+          borderRadius: "8px",
+          padding: "8px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <span style={{ fontSize: "16px" }}>🟢</span>
+          <span style={{ color: "#00e676", fontWeight: 600, fontSize: "13px" }}>
+            Active Pair: Lane {pairDisplay}
+          </span>
+        </div>
+      )}
 
       {/* Manual override banner */}
       {isManual && (
@@ -35,7 +61,7 @@ function SignalGrid({ lanes, activeLane, mode }) {
         }}>
           <span style={{ fontSize: "13px", fontWeight: 700 }}>WARNING</span>
           <span style={{ color: "#f59e0b", fontWeight: 600, fontSize: "13px" }}>
-            Manual Override Active — Yellow signals blinking (caution)
+            Manual Override Active — Pair {pairDisplay} — Yellow signals blinking (caution)
           </span>
         </div>
       )}
@@ -43,7 +69,7 @@ function SignalGrid({ lanes, activeLane, mode }) {
       {lanes.map((lane) => {
         const signalColor = getSignalColor(lane.lane);
         const signalLabel = getSignalLabel(lane.lane);
-        const isActive = lane.lane === activeLane;
+        const isActive = greenLanes.includes(lane.lane);
         const isYellow = signalLabel === "YELLOW";
 
         return (

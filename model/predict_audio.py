@@ -10,7 +10,7 @@ from collections import Counter
 CLASSES = ['ambulance', 'firetruck', 'traffic']
 
 # Load model ONCE at module level (converted .h5 format for Keras 2 compat)
-MODEL_PATH = "raahat_audio_model.h5"
+MODEL_PATH = os.environ.get("AUDIO_MODEL_PATH", "raahat_audio_model.h5")
 _audio_model = load_model(MODEL_PATH, compile=False)
 print(f"Audio model loaded from {MODEL_PATH}")
 
@@ -86,7 +86,7 @@ def raahat_predict_audio(video_path):
 
         return {
             "emergency_audio": emergency,
-            "confidence": round(avg_conf, 3),
+            "confidence": round(avg_conf, 3) if emergency else 0.0,
             "chunks_analyzed": len(predictions),
         }
 

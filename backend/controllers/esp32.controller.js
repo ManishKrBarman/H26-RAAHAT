@@ -8,12 +8,15 @@ const { getSignalState } = require("../services/signal.controller");
  * Returns a compact signal payload optimized for ESP32.
  * The ESP32 polls this every ~1 second and sets LEDs accordingly.
  * 
+ * Now supports PAIR-BASED signals: both lanes in the active pair are GREEN.
+ * 
  * Response:
  * {
- *   "active_lane": "B",
+ *   "active_lane": "A",
+ *   "active_pair": ["A", "C"],
  *   "mode": "AUTO",
  *   "remaining": 23,
- *   "lanes": { "A": "RED", "B": "GREEN", "C": "RED", "D": "RED" }
+ *   "lanes": { "A": "GREEN", "B": "RED", "C": "GREEN", "D": "RED" }
  * }
  */
 exports.getSignalForESP32 = async (req, res) => {
@@ -26,12 +29,13 @@ exports.getSignalForESP32 = async (req, res) => {
             intersection_id: intersectionId
         });
 
-        // Build lane→color map
+        // Build lane→color map using active PAIR
         const laneColors = {};
+        const activePair = signal.active_pair || (signal.active_lane ? [signal.active_lane] : []);
 
         if (intersection) {
             for (const laneId of intersection.lanes) {
-                if (signal.active_lane === laneId) {
+                if (activePair.includes(laneId)) {
                     laneColors[laneId] = "GREEN";
                 } else {
                     laneColors[laneId] = "RED";
@@ -44,6 +48,7 @@ exports.getSignalForESP32 = async (req, res) => {
 
         res.json({
             active_lane: signal.active_lane || null,
+            active_pair: activePair.length > 0 ? activePair : null,
             mode: signal.mode || "AUTO",
             remaining: signal.remainingSeconds || 0,
             reason: signal.reason || null,
@@ -54,6 +59,7 @@ exports.getSignalForESP32 = async (req, res) => {
         // On error, return all RED for safety
         res.status(500).json({
             active_lane: null,
+            active_pair: null,
             mode: "ERROR",
             remaining: 0,
             reason: "server_error",

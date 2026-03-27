@@ -6,30 +6,29 @@
  * It runs as a background loop (every 1s) and for each registered intersection:
  *   1. Checks if the current signal timer has expired
  *   2. If expired → gathers latest analyzed data for all lanes
- *   3. Runs the decision engine to pick the best lane
- *   4. Starts a new signal cycle with that lane
+ *   3. Runs the decision engine to pick the best PAIR of opposite lanes
+ *   4. Starts a new signal cycle with that pair
+ * 
+ * PAIR-BASED SIGNAL LOGIC:
+ *   At any given time, TWO opposite lanes (a pair) are GREEN while the
+ *   other pair is RED. For example: A↔C are GREEN, B↔D are RED.
+ *   Then they swap: B↔D go GREEN, A↔C go RED.
  * 
  * How it handles different scenarios:
  * 
  *   NORMAL CYCLE:
- *     Timer expires → re-evaluate all lanes → pick best → start new timer
+ *     Timer expires → re-evaluate all pairs → pick best pair → start new timer
  * 
  *   MANUAL OVERRIDE (HIGHEST PRIORITY):
  *     Manual override is ALWAYS king — no automated signal can interrupt it.
- *     If emergency is detected during manual override, it is SUPPRESSED
- *     (stored in signal state for frontend warning) but never overrides.
+ *     When operator picks a lane, its opposite pair also goes GREEN.
  *     Manual timer expires → engine detects mode was MANUAL & isExpired
- *     → re-evaluates lanes → returns to AUTO mode with new decision
+ *     → re-evaluates pairs → returns to AUTO mode with new decision
  * 
  *   EMERGENCY:
- *     Emergency detected in lane data → decision engine gives it score 1000+
- *     → forceOverride() immediately switches, even mid-timer
+ *     Emergency detected in lane data → decision engine gives its PAIR score 1000+
+ *     → forceOverride() immediately switches to that pair, even mid-timer
  *     UNLESS manual override is active (then suppressed)
- * 
- *   CONTINUOUS VIDEO (future):
- *     AI model writes analysis results to DB continuously
- *     → Engine reads latest data every tick → if emergency, interrupts
- *     → if normal, waits for timer to expire before switching
  * 
  *   NO DATA YET:
  *     Intersection registered but no videos analyzed → engine skips it
@@ -51,7 +50,7 @@ function startEngine() {
     if (isRunning) return;
     isRunning = true;
 
-    console.log("⚙️  Signal Cycle Engine started (1s interval)");
+    console.log("[ENGINE] Signal Cycle Engine started (1s interval) — PAIR-BASED MODE");
 
     engineInterval = setInterval(async () => {
         try {
@@ -70,19 +69,20 @@ function stopEngine() {
         clearInterval(engineInterval);
         engineInterval = null;
         isRunning = false;
-        console.log("⚙️  Signal Cycle Engine stopped");
+        console.log("[ENGINE] Signal Cycle Engine stopped");
     }
 }
 
 /**
  * Single tick — runs every second.
- * Checks all intersections and handles expired timers.
+ * Checks all intersections and handles expired timers using PAIR logic.
  */
 async function tick() {
     const intersections = await Intersection.find();
 
     for (const int of intersections) {
         const state = getSignalState(int.intersection_id);
+        const lanePairs = int.lane_pairs || [["A", "C"], ["B", "D"]];
 
         // Gather latest lane data for this intersection
         const laneData = await getLatestLaneData(int.intersection_id, int.lanes);
@@ -93,14 +93,13 @@ async function tick() {
         // Check for EMERGENCY in latest data
         const hasEmergency = laneData.some(l => l.emergency);
         if (hasEmergency) {
-            const decision = decideSignal(laneData); // no penalty for emergency
+            const decision = decideSignal(laneData, lanePairs); // no penalty for emergency
             if (decision.reason === "emergency vehicle") {
-                // 🛑 If manual override is active — DO NOT override, suppress instead
+                // If manual override is active — DO NOT override, suppress instead
                 if (state.mode === "MANUAL" && !state.isExpired) {
-                    // updateSignal will store the suppressed emergency info
                     updateSignal(int.intersection_id, decision);
                     console.log(
-                        `⚠️  Engine: Emergency detected on ${int.intersection_id} → Lane ${decision.active_lane} ` +
+                        `[WARN] Engine: Emergency detected on ${int.intersection_id} → Pair [${decision.active_pair.join("↔")}] ` +
                         `(SUPPRESSED — manual override active, ${state.remainingSeconds}s remaining)`
                     );
                     continue;
@@ -108,7 +107,7 @@ async function tick() {
                 // Normal emergency override (no manual active)
                 if (state.reason !== "emergency vehicle" || state.isExpired) {
                     forceOverride(int.intersection_id, decision);
-                    console.log(`🚨 Engine: Emergency override on ${int.intersection_id} → Lane ${decision.active_lane}`);
+                    console.log(`[EMERGENCY] Engine: Emergency override on ${int.intersection_id} → Pair [${decision.active_pair.join("↔")}]`);
                 }
                 continue;
             }
@@ -119,20 +118,21 @@ async function tick() {
             continue;
         }
 
-        // ✅ Timer expired (or no signal yet) → run new decision
-        // Pass the just-expired lane so it gets a fairness penalty (encourages rotation)
-        const previousLane = state.active_lane || null;
-        const decision = decideSignal(laneData, previousLane);
+        // Timer expired (or no signal yet) → run new decision
+        // Pass the just-expired PAIR so it gets a fairness penalty (encourages rotation)
+        const previousPair = state.active_pair || null;
+        const decision = decideSignal(laneData, lanePairs, previousPair);
 
         // Use updateSignal which handles all the logic
         updateSignal(int.intersection_id, decision);
 
-        // Only log if the lane actually changed or it's the first assignment
-        if (!state.active_lane || state.active_lane !== decision.active_lane || state.isExpired) {
+        // Only log if the pair actually changed or it's the first assignment
+        if (!state.active_pair || state.isExpired ||
+            JSON.stringify(state.active_pair) !== JSON.stringify(decision.active_pair)) {
             console.log(
-                `🔄 Engine: ${int.intersection_id} → Lane ${decision.active_lane} ` +
+                `[CYCLE] Engine: ${int.intersection_id} → Pair [${decision.active_pair.join("↔")}] ` +
                 `(${decision.reason}, ${decision.duration}s)` +
-                (decision.next_lane ? ` | Next: Lane ${decision.next_lane}` : "")
+                (decision.next_pair ? ` | Next: Pair [${decision.next_pair.join("↔")}]` : "")
             );
         }
     }

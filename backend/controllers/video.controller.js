@@ -121,7 +121,7 @@ exports.analyzeIntersection = async (req, res) => {
             });
         }
 
-        console.log(`🔄 Analyzing ${unprocessed.length} videos for ${intersection_id}...`);
+        console.log(`[ANALYZE] Analyzing ${unprocessed.length} videos for ${intersection_id}...`);
 
         // Process each video
         const results = [];
@@ -142,14 +142,14 @@ exports.analyzeIntersection = async (req, res) => {
                 });
 
                 results.push({ lane: video.lane_id, status: "analyzed", analysis });
-                console.log(`  ✅ ${video.lane_id}:`, analysis);
+                console.log(`  [OK] ${video.lane_id}:`, analysis);
             } catch (err) {
                 await Video.findByIdAndUpdate(video._id, {
                     status: "error",
                     error: err.message
                 });
                 results.push({ lane: video.lane_id, status: "error", error: err.message });
-                console.error(`  ❌ ${video.lane_id}:`, err.message);
+                console.error(`  [ERROR] ${video.lane_id}:`, err.message);
             }
         }
 

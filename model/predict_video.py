@@ -2,9 +2,11 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 from collections import defaultdict, Counter
+import os
 
-model_path = "best2.pt"
+model_path = os.environ.get("MODEL_PATH", "best2.pt")
 model = YOLO(model_path)
+
 def raahat_predict_video(input_video_path, output_video_path, line):
     cap = cv2.VideoCapture(input_video_path)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))

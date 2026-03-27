@@ -51,6 +51,10 @@ class PredictResponse(BaseModel):
 
 # ══════════ HEALTH CHECK ══════════
 
+@app.get("/")
+def root():
+    return {"message": "Model is running"}
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
@@ -182,9 +186,10 @@ def _derive_line(lane_id: str, line_type: Optional[str]) -> str:
 # ══════════ RUN ══════════
 
 if __name__ == "__main__":
+    port = int(os.environ.get("MODEL_PORT", 8000))
     uvicorn.run(
         "predict:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=True,
     )

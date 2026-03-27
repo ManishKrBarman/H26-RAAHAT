@@ -28,5 +28,11 @@ Thumbs.db
 dist/
 build/
 
-# ── AI Model (too large for git) ──
+# ── AI Model weights (too large for git) ──
 backend/model/*.pkl
+model/*.pt
+model/*.h5
+model/*.keras
+model/debug_videos/
+model/__pycache__/
+model/error_log.txt

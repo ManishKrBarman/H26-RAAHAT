@@ -16,7 +16,7 @@ let bucket = null;
 function initGridFS() {
     const db = mongoose.connection.db;
     bucket = new GridFSBucket(db, { bucketName: "videos" });
-    console.log("✅ GridFS 'videos' bucket initialized");
+    console.log("[OK] GridFS 'videos' bucket initialized");
 }
 
 /**

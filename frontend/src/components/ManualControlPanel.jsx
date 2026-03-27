@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import API_BASE_URL from "../config/api";
 
-function ManualControlPanel({ selectedIntersection }) {
+function ManualControlPanel({ selectedIntersection, lanePairs }) {
   const [lane, setLane] = useState("A");
   const [duration, setDuration] = useState(15);
   const [signalState, setSignalState] = useState(null);
@@ -11,6 +11,19 @@ function ManualControlPanel({ selectedIntersection }) {
   const [dismissing, setDismissing] = useState(false);
 
   const intId = selectedIntersection || "default";
+  const pairs = lanePairs || [["A", "C"], ["B", "D"]];
+
+  // Find the opposite lane for the selected lane
+  const getOppositeLane = (laneId) => {
+    for (const pair of pairs) {
+      if (pair.includes(laneId) && pair.length > 1) {
+        return pair.find(l => l !== laneId);
+      }
+    }
+    return null;
+  };
+
+  const oppositeLane = getOppositeLane(lane);
 
   // Poll signal state for the selected intersection
   useEffect(() => {
@@ -54,10 +67,20 @@ function ManualControlPanel({ selectedIntersection }) {
 
   const mode = signalState?.mode || "—";
   const activeLane = signalState?.active_lane || "—";
+  const activePair = signalState?.active_pair || [];
   const reason = signalState?.reason || "—";
   const nextLane = signalState?.next_lane;
+  const nextPair = signalState?.next_pair;
   const nextReason = signalState?.next_reason;
   const suppressedEmergency = signalState?.suppressedEmergency;
+
+  const activePairDisplay = activePair.length > 1
+    ? activePair.join(" ↔ ")
+    : activeLane;
+
+  const nextPairDisplay = nextPair && nextPair.length > 1
+    ? nextPair.join(" ↔ ")
+    : nextLane;
 
   return (
     <div className="manual-control-panel">
@@ -71,7 +94,7 @@ function ManualControlPanel({ selectedIntersection }) {
               Emergency Detected — Suppressed
             </span>
             <span className="suppressed-emergency-detail">
-              Lane {suppressedEmergency.lane} — {suppressedEmergency.reason}
+              Pair {(suppressedEmergency.pair || [suppressedEmergency.lane]).join(" ↔ ")} — {suppressedEmergency.reason}
             </span>
             <span className="suppressed-emergency-note">
               Your manual override is taking priority. Dismiss if false positive.
@@ -102,8 +125,8 @@ function ManualControlPanel({ selectedIntersection }) {
             <span className="stat-value" style={{ fontSize: "10px" }}>{intId}</span>
           </div>
           <div className="signal-stat-row">
-            <span className="stat-label">Active Lane</span>
-            <span className="stat-value lane-value">{activeLane}</span>
+            <span className="stat-label">Active Pair</span>
+            <span className="stat-value lane-value">{activePairDisplay}</span>
           </div>
           <div className="signal-stat-row">
             <span className="stat-label">Reason</span>
@@ -132,11 +155,11 @@ function ManualControlPanel({ selectedIntersection }) {
           </div>
 
           {/* Next Signal Prediction */}
-          {nextLane && (
+          {nextPairDisplay && (
             <div className="next-signal-card">
               <span className="next-signal-label">Next Signal</span>
               <div className="next-signal-info">
-                <span className="next-lane-badge">Lane {nextLane}</span>
+                <span className="next-lane-badge">Pair {nextPairDisplay}</span>
                 <span className="next-reason">{nextReason || "—"}</span>
               </div>
             </div>
@@ -149,7 +172,7 @@ function ManualControlPanel({ selectedIntersection }) {
         <h4 className="override-title">Manual Override</h4>
 
         <div className="override-field">
-          <label className="override-label">Lane</label>
+          <label className="override-label">Select Lane (opposite lane paired automatically)</label>
           <div className="lane-selector">
             {["A", "B", "C", "D"].map((l) => (
               <button
@@ -161,6 +184,17 @@ function ManualControlPanel({ selectedIntersection }) {
               </button>
             ))}
           </div>
+          {/* Show the opposite pairing */}
+          {oppositeLane && (
+            <p style={{
+              color: "#38bdf8",
+              fontSize: "11px",
+              marginTop: "4px",
+              fontWeight: 500
+            }}>
+              Lane {lane} ↔ Lane {oppositeLane} will both go GREEN
+            </p>
+          )}
         </div>
 
         <div className="override-field">
@@ -179,22 +213,15 @@ function ManualControlPanel({ selectedIntersection }) {
           onClick={handleOverride}
           disabled={loading}
         >
-          {loading ? "Applying..." : "Apply Override"}
+          {loading ? "Applying..." : `Override → Pair ${lane}${oppositeLane ? " ↔ " + oppositeLane : ""}`}
         </button>
 
         {/* Show what comes next after override */}
-        {nextLane && (
+        {nextPairDisplay && (
           <p className="override-note" style={{ color: "#38bdf8" }}>
-            After override expires → Lane {nextLane} ({nextReason || "auto"})
+            After override expires → Pair {nextPairDisplay} ({nextReason || "auto"})
           </p>
         )}
-
-        {/* <p className="override-note" style={{ color: "#00e676" }}>
-          Manual override takes priority over all automated signals including emergencies
-        </p>
-        <p className="override-note" style={{ color: "#f59e0b" }}>
-          During manual override, all yellow signals will blink to indicate caution — traffic can still proceed carefully.
-        </p> */}
       </div>
     </div>
   );

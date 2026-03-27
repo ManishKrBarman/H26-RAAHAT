@@ -1,8 +1,8 @@
 /**
  * signal.controller.js — Per-Intersection Signal State Manager
  * 
- * Each intersection has its own signal state (active lane, timer, mode).
- * Now also tracks next_lane prediction and suppressed emergency info.
+ * Each intersection has its own signal state (active pair, timer, mode).
+ * Now tracks PAIRS of opposite lanes (e.g., A↔C open together).
  * 
  * PRIORITY ORDER:
  *   1. MANUAL override (operator) — highest priority, never interrupted
@@ -16,12 +16,14 @@ const signals = {};
 function getOrCreateSignal(intersectionId) {
     if (!signals[intersectionId]) {
         signals[intersectionId] = {
-            active_lane: null,
+            active_lane: null,        // primary lane in pair (backward compat)
+            active_pair: null,        // NEW: ["A","C"] — both lanes open
             endsAt: null,
             mode: "AUTO",
             reason: null,
             duration: 0,
             next_lane: null,
+            next_pair: null,
             next_reason: null,
             next_duration: null,
             suppressedEmergency: null
@@ -38,27 +40,31 @@ function getOrCreateSignal(intersectionId) {
 function forceOverride(intersectionId, decision) {
     const current = getOrCreateSignal(intersectionId);
     const now = Date.now();
-    // 🛑 MANUAL override is KING — never interrupt it
+    // MANUAL override is KING — never interrupt it
     if (current.mode === "MANUAL" && current.endsAt && now < current.endsAt) {
         current.suppressedEmergency = {
             lane: decision.active_lane,
+            pair: decision.active_pair || [decision.active_lane],
             reason: decision.reason,
             timestamp: now
         };
         console.log(
-            `⚠️  Emergency SUPPRESSED on ${intersectionId}: ` +
-            `Lane ${decision.active_lane} (manual override active, ${Math.ceil((current.endsAt - now) / 1000)}s remaining)`
+            `[WARN] Emergency SUPPRESSED on ${intersectionId}: ` +
+            `Pair [${(decision.active_pair || [decision.active_lane]).join("↔")}] ` +
+            `(manual override active, ${Math.ceil((current.endsAt - now) / 1000)}s remaining)`
         );
         return getSignalState(intersectionId);
     }
     // Normal force-override — apply the decision
     signals[intersectionId] = {
         active_lane: decision.active_lane,
+        active_pair: decision.active_pair || [decision.active_lane],
         endsAt: now + decision.duration * 1000,
         mode: "AUTO",
         reason: decision.reason,
         duration: decision.duration,
         next_lane: decision.next_lane || null,
+        next_pair: decision.next_pair || null,
         next_reason: decision.next_reason || null,
         next_duration: decision.next_duration || null,
         suppressedEmergency: null
@@ -73,33 +79,34 @@ function updateSignal(intersectionId, decision) {
     const now = Date.now();
     const current = getOrCreateSignal(intersectionId);
 
-    // 🛑 MANUAL override is KING — no automated decision can interrupt it
+    // MANUAL override is KING — no automated decision can interrupt it
     if (current.mode === "MANUAL" && current.endsAt && now < current.endsAt) {
         // If it's an emergency, store as suppressed for frontend awareness
         if (decision.reason === "emergency vehicle") {
             current.suppressedEmergency = {
                 lane: decision.active_lane,
+                pair: decision.active_pair || [decision.active_lane],
                 reason: decision.reason,
                 timestamp: now
             };
             console.log(
-                `⚠️  Emergency SUPPRESSED in updateSignal on ${intersectionId}: ` +
-                `Lane ${decision.active_lane} (manual override active)`
+                `[WARN] Emergency SUPPRESSED in updateSignal on ${intersectionId}: ` +
+                `Pair [${(decision.active_pair || [decision.active_lane]).join("↔")}] (manual override active)`
             );
         }
         return getSignalState(intersectionId);
     }
-    // 🚨 Emergency overrides AUTO signals
+    // Emergency overrides AUTO signals
     if (decision.reason === "emergency vehicle") {
         return forceOverride(intersectionId, decision);
     }
 
-    // 🚫 If current signal is emergency, nothing except another emergency can override
+    // If current signal is emergency, nothing except another emergency can override
     if (current.reason === "emergency vehicle" && current.endsAt && now < current.endsAt) {
         return getSignalState(intersectionId);
     }
 
-    // 📊 High congestion override — only if >50% of current timer elapsed
+    // High congestion override — only if >50% of current timer elapsed
     if (decision.reason === "high traffic" && current.endsAt && now < current.endsAt) {
         const signalStartedAt = current.endsAt - (current.duration * 1000);
         const elapsed = now - signalStartedAt;
@@ -110,23 +117,25 @@ function updateSignal(intersectionId, decision) {
         }
     }
 
-    // ⏱️ Normal: if current signal still running → just update the next-lane prediction
+    // Normal: if current signal still running → just update the next-pair prediction
     if (current.endsAt && now < current.endsAt) {
-        // Update next lane even if timer is running
         current.next_lane = decision.active_lane;
+        current.next_pair = decision.active_pair || [decision.active_lane];
         current.next_reason = decision.reason;
         current.next_duration = decision.duration;
         return getSignalState(intersectionId);
     }
 
-    // ✅ Timer expired or no active signal → apply new decision
+    // Timer expired or no active signal → apply new decision
     signals[intersectionId] = {
         active_lane: decision.active_lane,
+        active_pair: decision.active_pair || [decision.active_lane],
         endsAt: now + decision.duration * 1000,
         mode: "AUTO",
         reason: decision.reason,
         duration: decision.duration,
         next_lane: decision.next_lane || null,
+        next_pair: decision.next_pair || null,
         next_reason: decision.next_reason || null,
         next_duration: decision.next_duration || null,
         suppressedEmergency: null
@@ -137,29 +146,41 @@ function updateSignal(intersectionId, decision) {
 
 /**
  * Manual override for a specific intersection.
- * This is the HIGHEST priority action — no automated system can interrupt it. 
- * Stores the next_lane so user knows what comes after manual override expires.
+ * Accepts a single lane — resolves to its pair using lanePairs config.
+ * This is the HIGHEST priority action — no automated system can interrupt it.
  */
-function manualOverride(intersectionId, lane, duration, nextLane) {
+function manualOverride(intersectionId, lane, duration, lanePairs, nextLane) {
     const current = getOrCreateSignal(intersectionId);
+
+    // Resolve the pair for the selected lane
+    let pair = [lane]; // fallback: just the single lane
+    if (lanePairs && lanePairs.length > 0) {
+        for (const p of lanePairs) {
+            if (p.includes(lane)) {
+                pair = p;
+                break;
+            }
+        }
+    }
 
     signals[intersectionId] = {
         active_lane: lane,
+        active_pair: pair,
         endsAt: Date.now() + duration * 1000,
         mode: "MANUAL",
         reason: "manual override",
         duration: duration,
         manualPriority: true,
-        // Keep existing next_lane prediction from AI, or use provided one
         next_lane: nextLane || current.next_lane || null,
+        next_pair: current.next_pair || null,
         next_reason: current.next_reason || null,
         next_duration: current.next_duration || null,
         suppressedEmergency: null
     };
 
     console.log(
-        `🔧 Manual override ACTIVATED on ${intersectionId}: ` +
-        `Lane ${lane} for ${duration}s (takes priority over ALL automated signals)`
+        `[MANUAL] Manual override ACTIVATED on ${intersectionId}: ` +
+        `Pair [${pair.join("↔")}] for ${duration}s (takes priority over ALL automated signals)`
     );
 
     return getSignalState(intersectionId);
@@ -172,13 +193,14 @@ function dismissSuppressedEmergency(intersectionId) {
     const current = getOrCreateSignal(intersectionId);
     if (current.suppressedEmergency) {
         console.log(
-            `✅ Suppressed emergency DISMISSED on ${intersectionId}: ` +
-            `Lane ${current.suppressedEmergency.lane} (operator acknowledged)`
+            `[OK] Suppressed emergency DISMISSED on ${intersectionId}: ` +
+            `Pair [${(current.suppressedEmergency.pair || [current.suppressedEmergency.lane]).join("↔")}] (operator acknowledged)`
         );
         current.suppressedEmergency = null;
     }
     return getSignalState(intersectionId);
 }
+
 /**
  * Get the full signal state for an intersection.
  */
@@ -199,6 +221,7 @@ function getSignalState(intersectionId) {
     return {
         intersection_id: intersectionId,
         active_lane: current.active_lane,
+        active_pair: current.active_pair || (current.active_lane ? [current.active_lane] : null),
         mode: current.mode,
         reason: current.reason,
         duration: current.duration,
@@ -206,6 +229,7 @@ function getSignalState(intersectionId) {
         isExpired,
         endsAt: current.endsAt,
         next_lane: current.next_lane,
+        next_pair: current.next_pair,
         next_reason: current.next_reason,
         next_duration: current.next_duration,
         suppressedEmergency: current.suppressedEmergency || null

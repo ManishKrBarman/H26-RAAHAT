@@ -15,7 +15,7 @@ const {
  * Build the full current state from DB:
  *   - All registered intersections
  *   - Latest video analysis per lane
- *   - Signal state per intersection
+ *   - Signal state per intersection (with active_pair)
  */
 exports.getCurrent = async (req, res) => {
     try {
@@ -52,9 +52,11 @@ exports.getCurrent = async (req, res) => {
                 id: int.intersection_id,
                 name: int.name,
                 location: int.location,
+                lane_pairs: int.lane_pairs || [["A", "C"], ["B", "D"]],
                 lanes,
                 decision: signal.active_lane ? {
                     active_lane: signal.active_lane,
+                    active_pair: signal.active_pair,
                     reason: signal.reason,
                     duration: signal.duration,
                     score: 0
@@ -76,7 +78,7 @@ exports.getCurrent = async (req, res) => {
 /**
  * POST /traffic/analyze
  * Takes intersection data (could be from external source or UI)
- * and runs the decision engine.
+ * and runs the decision engine using pair-based logic.
  */
 exports.analyzeTraffic = async (req, res) => {
     const { intersections } = req.body;
@@ -85,16 +87,21 @@ exports.analyzeTraffic = async (req, res) => {
         return res.status(400).json({ error: "Intersections required" });
     }
 
-    const result = intersections.map(int => {
-        const decision = decideSignal(int.lanes);
+    const result = [];
+    for (const int of intersections) {
+        // Look up the intersection to get lane_pairs
+        const dbInt = await Intersection.findOne({ intersection_id: int.id });
+        const lanePairs = dbInt?.lane_pairs || int.lane_pairs || [["A", "C"], ["B", "D"]];
+
+        const decision = decideSignal(int.lanes, lanePairs);
         const signal = updateSignal(int.id, decision);
 
-        return {
+        result.push({
             ...int,
             decision,
             signal
-        };
-    });
+        });
+    }
 
     await Traffic.create({ intersections: result });
 
@@ -111,10 +118,11 @@ exports.getHistory = async (req, res) => {
 
 /**
  * POST /traffic/manual
- * Manual override for a specific intersection + lane
+ * Manual override for a specific intersection + lane.
+ * The lane is automatically paired with its opposite lane.
  * Body: { intersection_id, lane, duration }
  */
-exports.manualControl = (req, res) => {
+exports.manualControl = async (req, res) => {
     const { intersection_id, lane, duration } = req.body;
 
     if (!lane || !duration) {
@@ -123,13 +131,18 @@ exports.manualControl = (req, res) => {
 
     // Default to "default" intersection if not specified
     const intId = intersection_id || "default";
-    const signal = manualOverride(intId, lane, duration);
+
+    // Look up intersection to get lane_pairs for pairing resolution
+    const dbInt = await Intersection.findOne({ intersection_id: intId });
+    const lanePairs = dbInt?.lane_pairs || [["A", "C"], ["B", "D"]];
+
+    const signal = manualOverride(intId, lane, duration, lanePairs);
     res.json(signal);
 };
 
 /**
  * GET /traffic/signal/:intersection_id
- * Get signal state for a specific intersection
+ * Get signal state for a specific intersection (includes active_pair)
  */
 exports.getSignalStatus = (req, res) => {
     const intId = req.params.intersection_id || "default";

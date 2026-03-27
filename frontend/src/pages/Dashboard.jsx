@@ -26,6 +26,10 @@ function Dashboard() {
     localStorage.setItem("raahat-theme", t);
   };
 
+  // Get the lane_pairs for the currently selected intersection
+  const selectedIntData = data.intersections?.find(i => i.id === selectedIntersection);
+  const selectedLanePairs = selectedIntData?.lane_pairs || [["A", "C"], ["B", "D"]];
+
   // Poll /traffic/current (now built from DB)
   useEffect(() => {
     const fetchData = async () => {
@@ -55,11 +59,14 @@ function Dashboard() {
           });
         }
 
-        // Signal change alerts per intersection
+        // Signal change alerts per intersection — now showing PAIR info
         for (const int of (res.data.intersections || [])) {
           const signal = int.signal;
-          if (signal?.active_lane) {
-            const msg = `${int.name || int.id}: Lane ${signal.active_lane} → GREEN (${signal.mode})`;
+          if (signal?.active_pair && signal.active_pair.length > 0) {
+            const pairStr = signal.active_pair.length > 1
+              ? signal.active_pair.join(" ↔ ")
+              : signal.active_pair[0];
+            const msg = `${int.name || int.id}: Pair ${pairStr} → GREEN (${signal.mode})`;
             setAlerts(prev => {
               if (prev[0]?.message === msg) return prev;
               return [
@@ -155,7 +162,10 @@ function Dashboard() {
       <div className="panel right">
         <h2>Control Center</h2>
 
-        <ManualControlPanel selectedIntersection={selectedIntersection} />
+        <ManualControlPanel
+          selectedIntersection={selectedIntersection}
+          lanePairs={selectedLanePairs}
+        />
 
         <div className="right-section-divider">
           <DeviceStatusPanel />
