@@ -8,9 +8,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from typing import Optional
 
-# Your prediction functions
-from predict_video import raahat_predict_video
-from predict_audio import raahat_predict_audio
+
 
 
 # ══════════ CONFIG ══════════
@@ -64,6 +62,8 @@ async def health():
 
 @app.post("/predict", response_model=PredictResponse)
 async def predict(req: PredictRequest):
+    from predict_video import raahat_predict_video
+    from predict_audio import raahat_predict_audio
     tmp_video_path = None
 
     try:
